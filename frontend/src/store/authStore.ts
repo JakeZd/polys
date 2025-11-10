@@ -122,56 +122,88 @@ export const useAuthStore = create<AuthState>()(
 
 // Selectors with SSR safety - combine state reads to avoid double subscription
 export const useUser = () => {
-  const state = useAuthStore((state) => {
-    if (!state) return { user: null, hasHydrated: false };
-    return {
-      user: state.user,
-      hasHydrated: state._hasHydrated
-    };
-  });
+  // Check if we're in SSR
+  if (typeof window === 'undefined') return null;
 
-  // During SSR or before hydration, return null
-  if (typeof window === 'undefined' || !state || !state.hasHydrated) return null;
-  return state.user;
+  try {
+    const state = useAuthStore((state) => {
+      if (!state) return { user: null, hasHydrated: false };
+      return {
+        user: state.user,
+        hasHydrated: state._hasHydrated
+      };
+    });
+
+    // During SSR or before hydration, return null
+    if (!state || !state.hasHydrated) return null;
+    return state.user;
+  } catch (error) {
+    console.error('Error in useUser:', error);
+    return null;
+  }
 };
 
 export const useToken = () => {
-  const state = useAuthStore((state) => {
-    if (!state) return { token: null, hasHydrated: false };
-    return {
-      token: state.token,
-      hasHydrated: state._hasHydrated
-    };
-  });
+  // Check if we're in SSR
+  if (typeof window === 'undefined') return null;
 
-  if (typeof window === 'undefined' || !state || !state.hasHydrated) return null;
-  return state.token;
+  try {
+    const state = useAuthStore((state) => {
+      if (!state) return { token: null, hasHydrated: false };
+      return {
+        token: state.token,
+        hasHydrated: state._hasHydrated
+      };
+    });
+
+    if (!state || !state.hasHydrated) return null;
+    return state.token;
+  } catch (error) {
+    console.error('Error in useToken:', error);
+    return null;
+  }
 };
 
 export const useIsAuthenticated = () => {
-  const state = useAuthStore((state) => {
-    if (!state) return { isAuthenticated: false, hasHydrated: false };
-    return {
-      isAuthenticated: state.isAuthenticated,
-      hasHydrated: state._hasHydrated
-    };
-  });
+  // Check if we're in SSR
+  if (typeof window === 'undefined') return false;
 
-  if (typeof window === 'undefined' || !state || !state.hasHydrated) return false;
-  return state.isAuthenticated;
+  try {
+    const state = useAuthStore((state) => {
+      if (!state) return { isAuthenticated: false, hasHydrated: false };
+      return {
+        isAuthenticated: state.isAuthenticated,
+        hasHydrated: state._hasHydrated
+      };
+    });
+
+    if (!state || !state.hasHydrated) return false;
+    return state.isAuthenticated;
+  } catch (error) {
+    console.error('Error in useIsAuthenticated:', error);
+    return false;
+  }
 };
 
 export const useUserPoints = () => {
-  const state = useAuthStore((state) => {
-    if (!state) return { points: 0, hasHydrated: false };
-    return {
-      points: state.user?.points ?? 0,
-      hasHydrated: state._hasHydrated
-    };
-  });
+  // Check if we're in SSR
+  if (typeof window === 'undefined') return 0;
 
-  if (typeof window === 'undefined' || !state || !state.hasHydrated) return 0;
-  return state.points;
+  try {
+    const state = useAuthStore((state) => {
+      if (!state) return { points: 0, hasHydrated: false };
+      return {
+        points: state.user?.points ?? 0,
+        hasHydrated: state._hasHydrated
+      };
+    });
+
+    if (!state || !state.hasHydrated) return 0;
+    return state.points;
+  } catch (error) {
+    console.error('Error in useUserPoints:', error);
+    return 0;
+  }
 };
 
 export default useAuthStore;
