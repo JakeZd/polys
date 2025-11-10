@@ -14,6 +14,7 @@ interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
+  _hasHydrated: boolean;
 
   // Actions
   setUser: (user: User) => void;
@@ -22,6 +23,7 @@ interface AuthState {
   logout: () => void;
   updatePoints: (points: number) => void;
   updateUser: (updates: Partial<User>) => void;
+  setHasHydrated: (state: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -31,6 +33,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       isAuthenticated: false,
+      _hasHydrated: false,
 
       // Set user
       setUser: (user) =>
@@ -94,6 +97,13 @@ export const useAuthStore = create<AuthState>()(
           });
         }
       },
+
+      // Set hydration state
+      setHasHydrated: (state) => {
+        set({
+          _hasHydrated: state,
+        });
+      },
     }),
     {
       name: 'auth-storage',
@@ -103,44 +113,45 @@ export const useAuthStore = create<AuthState>()(
         token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     }
   )
 );
 
-// Hook to check if store is hydrated (fixes SSR issues)
-const useHydration = () => {
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    setHydrated(true);
-  }, []);
-
-  return hydrated;
-};
-
-// Selectors with SSR safety (для оптимизации)
+// Selectors with SSR safety - simple client-side check
 export const useUser = () => {
-  const hydrated = useHydration();
   const user = useAuthStore((state) => state.user);
-  return hydrated ? user : null;
+  const hasHydrated = useAuthStore((state) => state._hasHydrated);
+
+  // During SSR or before hydration, return null
+  if (typeof window === 'undefined' || !hasHydrated) return null;
+  return user;
 };
 
 export const useToken = () => {
-  const hydrated = useHydration();
   const token = useAuthStore((state) => state.token);
-  return hydrated ? token : null;
+  const hasHydrated = useAuthStore((state) => state._hasHydrated);
+
+  if (typeof window === 'undefined' || !hasHydrated) return null;
+  return token;
 };
 
 export const useIsAuthenticated = () => {
-  const hydrated = useHydration();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  return hydrated ? isAuthenticated : false;
+  const hasHydrated = useAuthStore((state) => state._hasHydrated);
+
+  if (typeof window === 'undefined' || !hasHydrated) return false;
+  return isAuthenticated;
 };
 
 export const useUserPoints = () => {
-  const hydrated = useHydration();
   const points = useAuthStore((state) => state.user?.points ?? 0);
-  return hydrated ? points : 0;
+  const hasHydrated = useAuthStore((state) => state._hasHydrated);
+
+  if (typeof window === 'undefined' || !hasHydrated) return 0;
+  return points;
 };
 
 export default useAuthStore;
