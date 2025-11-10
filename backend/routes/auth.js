@@ -56,27 +56,63 @@ export const authMiddleware = (req, res, next) => {
 router.get("/nonce/:wallet", authLimiter, async (req, res) => {
   try {
     const wallet = req.params.wallet.toLowerCase();
-    
+
     if (!ethers.isAddress(wallet)) {
-      return res.status(400).json({ 
-        error: "Invalid wallet address" 
+      return res.status(400).json({
+        error: "Invalid wallet address"
       });
     }
-    
+
     const nonce = generateNonce();
     const message = `Welcome to PolySynapse!\n\nSign this message to authenticate with the Neural Prediction Network.\n\nNonce: ${nonce}`;
-    
+
     global.nonceCache = global.nonceCache || {};
     global.nonceCache[wallet] = {
       nonce,
       message,
       timestamp: Date.now()
     };
-    
+
     res.json({ message, nonce });
   } catch (error) {
     console.error("Nonce generation error:", error);
     res.status(500).json({ error: "Failed to generate nonce" });
+  }
+});
+
+// POST /auth/message - Alternative endpoint for frontend compatibility
+router.post("/message", authLimiter, async (req, res) => {
+  try {
+    const { wallet } = req.body;
+
+    if (!wallet) {
+      return res.status(400).json({
+        error: "Wallet address is required"
+      });
+    }
+
+    const walletLower = wallet.toLowerCase();
+
+    if (!ethers.isAddress(walletLower)) {
+      return res.status(400).json({
+        error: "Invalid wallet address"
+      });
+    }
+
+    const nonce = generateNonce();
+    const message = `Welcome to PolySynapse!\n\nSign this message to authenticate with the Neural Prediction Network.\n\nNonce: ${nonce}`;
+
+    global.nonceCache = global.nonceCache || {};
+    global.nonceCache[walletLower] = {
+      nonce,
+      message,
+      timestamp: Date.now()
+    };
+
+    res.json({ message, nonce });
+  } catch (error) {
+    console.error("Message generation error:", error);
+    res.status(500).json({ error: "Failed to generate message" });
   }
 });
 
