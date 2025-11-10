@@ -97,6 +97,17 @@ export function useActiveMarkets(limit = 50) {
 }
 
 /**
+ * Получение результатов AI ставок (resolved markets)
+ */
+export function useMarketResults(category?: string, limit = 50, offset = 0) {
+  return useQuery({
+    queryKey: ['market-results', category, limit, offset],
+    queryFn: () => marketsApi.getMarketResults(category, limit, offset),
+    staleTime: 2 * 60 * 1000, // 2 минуты кеш (resolved markets don't change often)
+  });
+}
+
+/**
  * Infinite scroll для рынков
  */
 export function useInfiniteMarkets(filters?: Omit<MarketFilters, 'offset'>) {
@@ -135,5 +146,6 @@ export default {
   useSearchMarkets,
   useMarketsByCategory,
   useActiveMarkets,
+  useMarketResults,
   useInfiniteMarkets,
 };
