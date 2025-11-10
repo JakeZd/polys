@@ -4,13 +4,14 @@ import { Coins, Flame, Trophy, TrendingUp, Calendar, Award } from 'lucide-react'
 import { NeuralBackground } from '@/components/NeuralBackground';
 import { Header } from '@/components/Header';
 import { ConnectWalletModal } from '@/components/ConnectWalletModal';
-import { useAuthStore } from '@/store/authStore';
+import { useUser, useIsAuthenticated } from '@/store/authStore';
 import { useDailyCheckin, useCanCheckin, useStreakInfo, usePointsHistory } from '@/hooks/usePoints';
 import { useBetStats } from '@/hooks/useBets';
 import { formatDistanceToNow } from 'date-fns';
 
 export default function ProfilePage() {
-  const { user, isAuthenticated } = useAuthStore();
+  const user = useUser();
+  const isAuthenticated = useIsAuthenticated();
   const { mutate: checkin, isPending } = useDailyCheckin();
   const canCheckin = useCanCheckin();
   const streakInfo = useStreakInfo();
