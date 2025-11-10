@@ -13,11 +13,11 @@ interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
-  
+
   // Actions
   setUser: (user: User) => void;
   setToken: (token: string) => void;
-  login: (token: string, user: User) => void;
+  login: (token: string, user: Partial<User> & { id: string; wallet: string; points: number }) => void;
   logout: () => void;
   updatePoints: (points: number) => void;
   updateUser: (updates: Partial<User>) => void;
@@ -47,9 +47,19 @@ export const useAuthStore = create<AuthState>()(
       // Login
       login: (token, user) => {
         setAuthToken(token);
+        // Fill in missing fields with defaults
+        const fullUser: User = {
+          id: user.id,
+          wallet: user.wallet,
+          points: user.points,
+          createdAt: user.createdAt || new Date().toISOString(),
+          lastCheckin: user.lastCheckin || null,
+          streakDays: user.streakDays || 0,
+          stats: user.stats,
+        };
         set({
           token,
-          user,
+          user: fullUser,
           isAuthenticated: true,
         });
       },
