@@ -120,38 +120,46 @@ export const useAuthStore = create<AuthState>()(
   )
 );
 
-// Selectors with SSR safety - simple client-side check
+// Selectors with SSR safety - combine state reads to avoid double subscription
 export const useUser = () => {
-  const user = useAuthStore((state) => state.user);
-  const hasHydrated = useAuthStore((state) => state._hasHydrated);
+  const state = useAuthStore((state) => ({
+    user: state.user,
+    hasHydrated: state._hasHydrated
+  }));
 
   // During SSR or before hydration, return null
-  if (typeof window === 'undefined' || !hasHydrated) return null;
-  return user;
+  if (typeof window === 'undefined' || !state.hasHydrated) return null;
+  return state.user;
 };
 
 export const useToken = () => {
-  const token = useAuthStore((state) => state.token);
-  const hasHydrated = useAuthStore((state) => state._hasHydrated);
+  const state = useAuthStore((state) => ({
+    token: state.token,
+    hasHydrated: state._hasHydrated
+  }));
 
-  if (typeof window === 'undefined' || !hasHydrated) return null;
-  return token;
+  if (typeof window === 'undefined' || !state.hasHydrated) return null;
+  return state.token;
 };
 
 export const useIsAuthenticated = () => {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const hasHydrated = useAuthStore((state) => state._hasHydrated);
+  const state = useAuthStore((state) => ({
+    isAuthenticated: state.isAuthenticated,
+    hasHydrated: state._hasHydrated
+  }));
 
-  if (typeof window === 'undefined' || !hasHydrated) return false;
-  return isAuthenticated;
+  if (typeof window === 'undefined' || !state.hasHydrated) return false;
+  return state.isAuthenticated;
 };
 
 export const useUserPoints = () => {
-  const points = useAuthStore((state) => state.user?.points ?? 0);
-  const hasHydrated = useAuthStore((state) => state._hasHydrated);
+  const state = useAuthStore((state) => ({
+    points: state.user?.points ?? 0,
+    hasHydrated: state._hasHydrated
+  }));
 
-  if (typeof window === 'undefined' || !hasHydrated) return 0;
-  return points;
+  if (typeof window === 'undefined' || !state.hasHydrated) return 0;
+  return state.points;
 };
 
 export default useAuthStore;
