@@ -99,20 +99,21 @@ export function useBet(id: string | null) {
  */
 export function usePlaceBet() {
   const queryClient = useQueryClient();
-  const { updatePoints, user } = useAuthStore();
+  const { updatePoints } = useAuthStore();
 
   return useMutation({
     mutationFn: (data: PlaceBetRequest) => betsApi.placeBet(data),
-    
+
     // Optimistic update - сразу уменьшаем поинты
     onMutate: async (variables) => {
+      const user = useAuthStore.getState().user; // Get current user from store
       if (user) {
         // Сохраняем старое значение для rollback
         const previousPoints = user.points;
-        
+
         // Оптимистично обновляем поинты
         updatePoints(user.points - variables.stake);
-        
+
         return { previousPoints };
       }
     },

@@ -5,7 +5,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { pointsApi } from '@/api';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore, useIsAuthenticated, useUser } from '@/store/authStore';
 import { toast } from 'react-hot-toast';
 import type { PointsTransactionType } from '@/types';
 
@@ -21,7 +21,7 @@ export function usePointsHistory(
   limit = 50,
   offset = 0
 ) {
-  const { isAuthenticated } = useAuthStore();
+  const isAuthenticated = useIsAuthenticated();
 
   return useQuery({
     queryKey: ['points-history', type, limit, offset],
@@ -65,7 +65,8 @@ export function useTopLeaders() {
  */
 export function useDailyCheckin() {
   const queryClient = useQueryClient();
-  const { updatePoints, updateUser, user } = useAuthStore();
+  const user = useUser();
+  const { updatePoints, updateUser } = useAuthStore();
 
   return useMutation({
     mutationFn: pointsApi.dailyCheckin,
@@ -111,7 +112,7 @@ export function useDailyCheckin() {
  * Проверка возможности check-in
  */
 export function useCanCheckin() {
-  const { user } = useAuthStore();
+  const user = useUser();
 
   if (!user || !user.lastCheckin) return true;
 
@@ -128,7 +129,7 @@ export function useCanCheckin() {
  * Хелпер для streak информации
  */
 export function useStreakInfo() {
-  const { user } = useAuthStore();
+  const user = useUser();
 
   if (!user) {
     return {
