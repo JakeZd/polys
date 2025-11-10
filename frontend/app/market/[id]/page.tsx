@@ -9,7 +9,7 @@ import { Header } from '@/components/Header';
 import { ConnectWalletModal } from '@/components/ConnectWalletModal';
 import { useMarket, useMarketPrices } from '@/hooks/useMarkets';
 import { usePlaceBet } from '@/hooks/useBets';
-import { useAuthStore } from '@/store/authStore';
+import { useIsAuthenticated, useUser } from '@/store/authStore';
 import { formatDistanceToNow } from 'date-fns';
 import type { BetSide } from '@/types';
 
@@ -20,13 +20,18 @@ export default function MarketDetailsPage() {
   const { data: marketData, isLoading } = useMarket(marketId);
   const { data: pricesData } = useMarketPrices(marketId, '24h');
   const { mutate: placeBet, isPending: isPlacing } = usePlaceBet();
-  const { isAuthenticated, user } = useAuthStore();
+  const isAuthenticated = useIsAuthenticated();
+  const user = useUser();
 
   const [selectedSide, setSelectedSide] = useState<BetSide>('YES');
   const [stake, setStake] = useState<number>(100);
 
   const market = marketData?.market;
-  const aiPrediction = market?.aiBets?.[0];
+  const aiPrediction = market?.aiBet || market?.aiBets?.[0];
+
+  // Get prices from currentPrices or fallback to yesPrice/noPrice
+  const yesPrice = market?.currentPrices?.yesPrice ?? market?.yesPrice ?? 0.5;
+  const noPrice = market?.currentPrices?.noPrice ?? market?.noPrice ?? 0.5;
 
   if (isLoading) {
     return (
@@ -55,9 +60,9 @@ export default function MarketDetailsPage() {
     );
   }
 
-  const currentPrice = selectedSide === 'YES' ? market.yesPrice : market.noPrice;
+  const currentPrice = selectedSide === 'YES' ? yesPrice : noPrice;
   const potentialPayout = Math.floor((stake / currentPrice) * 0.95); // 5% fee
-  const timeUntilEnd = formatDistanceToNow(new Date(market.endTime), { addSuffix: true });
+  const timeUntilEnd = market ? formatDistanceToNow(new Date(market.endTime), { addSuffix: true }) : '';
 
   const handlePlaceBet = () => {
     if (!isAuthenticated) {
@@ -154,6 +159,59 @@ export default function MarketDetailsPage() {
                   </div>
                 </div>
 
+                {/* AI Performance Metrics */}
+                {aiPrediction.pnl !== undefined && (
+                  <div className="mb-4 p-4 rounded-lg bg-slate-900/50 border border-slate-700">
+                    <h4 className="text-sm font-semibold text-slate-300 mb-3">Performance</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-xs text-slate-400 mb-1">Entry Price</p>
+                        <p className="text-sm font-bold">
+                          {((aiPrediction.entryPrice || 0) * 100).toFixed(1)}¢
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400 mb-1">Current Price</p>
+                        <p className="text-sm font-bold">
+                          {((aiPrediction.currentPrice || 0) * 100).toFixed(1)}¢
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400 mb-1">Stake</p>
+                        <p className="text-sm font-bold">{aiPrediction.stake.toLocaleString()} pts</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400 mb-1">Current Value</p>
+                        <p className="text-sm font-bold">
+                          {(aiPrediction.currentValue || 0).toLocaleString()} pts
+                        </p>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="text-xs text-slate-400 mb-1">Profit/Loss</p>
+                        <p className={`text-lg font-bold ${
+                          aiPrediction.pnl > 0 ? 'text-green-400' :
+                          aiPrediction.pnl < 0 ? 'text-red-400' : 'text-slate-400'
+                        }`}>
+                          {aiPrediction.pnl > 0 ? '+' : ''}{aiPrediction.pnl.toLocaleString()} pts
+                          {aiPrediction.pnlPercentage && (
+                            <span className="ml-2 text-sm">
+                              ({aiPrediction.pnl > 0 ? '+' : ''}{aiPrediction.pnlPercentage}%)
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      {aiPrediction.edge !== undefined && (
+                        <div className="col-span-2">
+                          <p className="text-xs text-slate-400 mb-1">AI Edge</p>
+                          <p className="text-sm font-bold text-cyan-400">
+                            {(aiPrediction.edge * 100).toFixed(2)}%
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <div className="p-4 rounded-lg bg-slate-900/50 border border-slate-700">
                   <p className="text-sm text-slate-300 leading-relaxed">
                     <strong className="text-cyan-400">Reasoning:</strong> {aiPrediction.reasoning}
@@ -192,7 +250,7 @@ export default function MarketDetailsPage() {
                       <span className="font-bold text-lg">YES</span>
                     </div>
                     <span className="text-2xl font-bold text-green-400">
-                      {(market.yesPrice * 100).toFixed(1)}¢
+                      {(yesPrice * 100).toFixed(1)}¢
                     </span>
                   </div>
                   {aiPrediction?.side === 'YES' && (
@@ -217,7 +275,7 @@ export default function MarketDetailsPage() {
                       <span className="font-bold text-lg">NO</span>
                     </div>
                     <span className="text-2xl font-bold text-red-400">
-                      {(market.noPrice * 100).toFixed(1)}¢
+                      {(noPrice * 100).toFixed(1)}¢
                     </span>
                   </div>
                   {aiPrediction?.side === 'NO' && (

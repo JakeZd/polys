@@ -6,14 +6,14 @@ import { NeuralBackground } from '@/components/NeuralBackground';
 import { Header } from '@/components/Header';
 import { ConnectWalletModal } from '@/components/ConnectWalletModal';
 import { useActiveBets, useSettledBets, useBetStats } from '@/hooks/useBets';
-import { useAuthStore } from '@/store/authStore';
+import { useIsAuthenticated } from '@/store/authStore';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import type { UserBet } from '@/types';
 
 export default function BetsPage() {
   const [activeTab, setActiveTab] = useState<'active' | 'settled'>('active');
-  const { isAuthenticated } = useAuthStore();
+  const isAuthenticated = useIsAuthenticated();
 
   const { data: activeBetsData, isLoading: loadingActive } = useActiveBets();
   const { data: settledBetsData, isLoading: loadingSettled } = useSettledBets();

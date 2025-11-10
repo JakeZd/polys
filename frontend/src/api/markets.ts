@@ -95,6 +95,16 @@ export const marketsApi = {
     });
     return response.data;
   },
+
+  /**
+   * Получение результатов AI ставок (resolved markets with stats)
+   */
+  getMarketResults: async (category?: string, limit = 50, offset = 0) => {
+    const response = await apiClient.get('/markets/results', {
+      params: { category, limit, offset },
+    });
+    return response.data;
+  },
 };
 
 export default marketsApi;

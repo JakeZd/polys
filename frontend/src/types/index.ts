@@ -36,19 +36,30 @@ export interface Market {
   description: string | null;
   category: string;
   endTime: string;
+  daysUntilEnd?: number;
+  isExpired?: boolean;
+  marketStatus?: 'active' | 'expired' | 'resolved';
   volume: number;
+  liquidity?: number;
   yesPrice: number;
   noPrice: number;
+  currentPrices?: {
+    yesPrice: number;
+    noPrice: number;
+  };
   lastPriceUpdate: string | null;
   resolved: boolean;
   outcome: string | null;
   createdAt: string;
   updatedAt: string;
+  userBetsCount?: number;
+  totalUserVolume?: number;
   _count?: {
     userBets: number;
     aiBets: number;
   };
   aiBets?: AIBet[];
+  aiBet?: AIBet;
 }
 
 export interface MarketFilters {
@@ -98,12 +109,19 @@ export interface AIBet {
   confidence: number;
   reasoning: string;
   entryPrice: number;
+  currentPrice?: number;
   expectedValue: number;
+  edge?: number;
   stake: number;
+  potentialPayout?: number;
+  currentValue?: number;
+  pnl?: number;
+  pnlPercentage?: string | number;
   placedAt: string;
   settled: boolean;
   won: boolean | null;
   payout: number | null;
+  actualPayout?: number;
   settledAt: string | null;
 }
 

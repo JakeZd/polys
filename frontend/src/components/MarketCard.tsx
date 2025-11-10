@@ -10,9 +10,13 @@ interface MarketCardProps {
 }
 
 export function MarketCard({ market }: MarketCardProps) {
-  const aiPrediction = market.aiBets?.[0];
+  const aiPrediction = market.aiBet || market.aiBets?.[0];
   const timeUntilEnd = formatDistanceToNow(new Date(market.endTime), { addSuffix: true });
-  
+
+  // Get prices from currentPrices or fallback to yesPrice/noPrice
+  const yesPrice = market.currentPrices?.yesPrice ?? market.yesPrice;
+  const noPrice = market.currentPrices?.noPrice ?? market.noPrice;
+
   // Determine if ending soon (< 24 hours)
   const hoursUntilEnd = (new Date(market.endTime).getTime() - Date.now()) / (1000 * 60 * 60);
   const isEndingSoon = hoursUntilEnd < 24;
@@ -49,11 +53,29 @@ export function MarketCard({ market }: MarketCardProps) {
                 AI Prediction: {aiPrediction.side}
               </span>
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-400">Confidence</span>
-              <span className="font-bold text-cyan-400">
-                {aiPrediction.confidence.toFixed(1)}%
-              </span>
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-400">Confidence</span>
+                <span className="font-bold text-cyan-400">
+                  {aiPrediction.confidence.toFixed(1)}%
+                </span>
+              </div>
+              {aiPrediction.pnl !== undefined && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-400">AI P&L</span>
+                  <span className={`font-bold ${
+                    aiPrediction.pnl > 0 ? 'text-green-400' :
+                    aiPrediction.pnl < 0 ? 'text-red-400' : 'text-slate-400'
+                  }`}>
+                    {aiPrediction.pnl > 0 ? '+' : ''}{aiPrediction.pnl.toLocaleString()} pts
+                    {aiPrediction.pnlPercentage && (
+                      <span className="ml-1 text-xs">
+                        ({aiPrediction.pnl > 0 ? '+' : ''}{aiPrediction.pnlPercentage}%)
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -66,7 +88,7 @@ export function MarketCard({ market }: MarketCardProps) {
               <span className="text-xs text-slate-400">YES</span>
             </div>
             <p className="text-lg font-bold text-green-400">
-              {(market.yesPrice * 100).toFixed(1)}¢
+              {(yesPrice * 100).toFixed(1)}¢
             </p>
           </div>
           <div className="p-3 rounded-lg bg-red-950/30 border border-red-500/30">
@@ -75,7 +97,7 @@ export function MarketCard({ market }: MarketCardProps) {
               <span className="text-xs text-slate-400">NO</span>
             </div>
             <p className="text-lg font-bold text-red-400">
-              {(market.noPrice * 100).toFixed(1)}¢
+              {(noPrice * 100).toFixed(1)}¢
             </p>
           </div>
         </div>
