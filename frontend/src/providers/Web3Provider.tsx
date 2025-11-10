@@ -17,7 +17,7 @@ const mainnet = {
   name: 'Ethereum',
   currency: 'ETH',
   explorerUrl: 'https://etherscan.io',
-  rpcUrl: 'https://cloudflare-eth.com'
+  rpcUrl: 'https://eth.llamarpc.com'
 };
 
 const polygon = {
@@ -25,7 +25,7 @@ const polygon = {
   name: 'Polygon',
   currency: 'MATIC',
   explorerUrl: 'https://polygonscan.com',
-  rpcUrl: 'https://polygon-rpc.com'
+  rpcUrl: 'https://polygon.llamarpc.com'
 };
 
 // 3. Create a metadata object
@@ -42,7 +42,7 @@ const ethersConfig = defaultConfig({
   enableEIP6963: true, // Enable EIP-6963 for better wallet detection
   enableInjected: true, // Enable injected wallets (MetaMask, Rabby, etc.)
   enableCoinbase: true, // Enable Coinbase Wallet
-  rpcUrl: 'https://cloudflare-eth.com', // Used for read-only operations
+  rpcUrl: 'https://eth.llamarpc.com', // Used for read-only operations
   defaultChainId: 1,
 });
 

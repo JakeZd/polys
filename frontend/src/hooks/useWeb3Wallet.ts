@@ -45,10 +45,10 @@ export function useWeb3Wallet() {
       const { message } = await authApi.generateMessage(address);
 
       // Step 4: Sign the message with the wallet
+      toast.loading('Please sign the message in your wallet...', { id: 'auth' });
+
       const ethersProvider = new BrowserProvider(walletProvider);
       const signer = await ethersProvider.getSigner();
-
-      toast.loading('Please sign the message in your wallet...', { id: 'auth' });
       const signature = await signer.signMessage(message);
 
       // Step 5: Verify signature with backend
@@ -70,6 +70,10 @@ export function useWeb3Wallet() {
       // Handle user rejection
       if (error.code === 'ACTION_REJECTED' || error.code === 4001) {
         toast.error('Signature rejected', { id: 'auth' });
+      } else if (error.code === 'UNKNOWN_ERROR' || error.code === -32603) {
+        toast.error('Network error. Please try again or switch networks.', { id: 'auth' });
+      } else if (error.message?.includes('could not coalesce error')) {
+        toast.error('Network connection issue. Please try again.', { id: 'auth' });
       } else {
         toast.error(error.message || 'Authentication failed', { id: 'auth' });
       }
