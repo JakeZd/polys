@@ -1,0 +1,106 @@
+/**
+ * useWeb3Wallet - Custom hook for Web3 wallet operations
+ * Handles wallet connection, signing, and integration with our auth system
+ */
+
+import { useWeb3Modal, useWeb3ModalAccount, useWeb3ModalProvider } from '@web3modal/ethers/react';
+import { BrowserProvider } from 'ethers';
+import { useState } from 'react';
+import { toast } from 'react-hot-toast';
+import { authApi } from '@/api';
+import { useAuthStore } from '@/store/authStore';
+
+export function useWeb3Wallet() {
+  const { open } = useWeb3Modal();
+  const { address, isConnected } = useWeb3ModalAccount();
+  const { walletProvider } = useWeb3ModalProvider();
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const { login } = useAuthStore();
+
+  /**
+   * Connect wallet and authenticate with backend
+   */
+  const connectAndAuth = async () => {
+    try {
+      setIsAuthenticating(true);
+
+      // Step 1: Open Web3Modal to connect wallet
+      if (!isConnected) {
+        await open();
+        // Wait a bit for connection to establish
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
+      // Step 2: Get the connected address
+      if (!address) {
+        throw new Error('No wallet address found');
+      }
+
+      if (!walletProvider) {
+        throw new Error('No wallet provider found');
+      }
+
+      // Step 3: Request message to sign from backend
+      toast.loading('Requesting signature...', { id: 'auth' });
+      const { message } = await authApi.generateMessage(address);
+
+      // Step 4: Sign the message with the wallet
+      const ethersProvider = new BrowserProvider(walletProvider);
+      const signer = await ethersProvider.getSigner();
+
+      toast.loading('Please sign the message in your wallet...', { id: 'auth' });
+      const signature = await signer.signMessage(message);
+
+      // Step 5: Verify signature with backend
+      toast.loading('Verifying signature...', { id: 'auth' });
+      const response = await authApi.verifySignature(address, signature, message);
+
+      // Step 6: Store auth data
+      login(response.token, response.user);
+
+      toast.success(
+        response.user.isNew ? 'Welcome to PolySynapse!' : 'Welcome back!',
+        { id: 'auth' }
+      );
+
+      return response;
+    } catch (error: any) {
+      console.error('Auth error:', error);
+
+      // Handle user rejection
+      if (error.code === 'ACTION_REJECTED' || error.code === 4001) {
+        toast.error('Signature rejected', { id: 'auth' });
+      } else {
+        toast.error(error.message || 'Authentication failed', { id: 'auth' });
+      }
+
+      throw error;
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
+  /**
+   * Just open the wallet modal without auth
+   */
+  const openWalletModal = async () => {
+    try {
+      await open();
+    } catch (error) {
+      console.error('Failed to open wallet modal:', error);
+      toast.error('Failed to open wallet selector');
+    }
+  };
+
+  return {
+    // State
+    address,
+    isConnected,
+    isAuthenticating,
+
+    // Actions
+    connectAndAuth,
+    openWalletModal,
+    open: openWalletModal,
+  };
+}

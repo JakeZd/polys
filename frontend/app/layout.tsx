@@ -1,5 +1,6 @@
 import './globals.css';
 import { QueryProvider } from '@/providers/QueryProvider';
+import { Web3Provider } from '@/providers/Web3Provider';
 import { Toaster } from 'react-hot-toast';
 import type { Metadata } from 'next';
 
@@ -22,32 +23,34 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-slate-950 text-white antialiased">
-        <QueryProvider>
-          {children}
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 3000,
-              style: {
-                background: '#1e293b',
-                color: '#fff',
-                border: '1px solid #334155',
-              },
-              success: {
-                iconTheme: {
-                  primary: '#10b981',
-                  secondary: '#fff',
+        <Web3Provider>
+          <QueryProvider>
+            {children}
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 3000,
+                style: {
+                  background: '#1e293b',
+                  color: '#fff',
+                  border: '1px solid #334155',
                 },
-              },
-              error: {
-                iconTheme: {
-                  primary: '#ef4444',
-                  secondary: '#fff',
+                success: {
+                  iconTheme: {
+                    primary: '#10b981',
+                    secondary: '#fff',
+                  },
                 },
-              },
-            }}
-          />
-        </QueryProvider>
+                error: {
+                  iconTheme: {
+                    primary: '#ef4444',
+                    secondary: '#fff',
+                  },
+                },
+              }}
+            />
+          </QueryProvider>
+        </Web3Provider>
       </body>
     </html>
   );
