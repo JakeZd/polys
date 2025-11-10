@@ -339,6 +339,74 @@ router.get("/ai", async (req, res) => {
   }
 });
 
+router.get("/stats", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // Get total bets count
+    const totalBets = await prisma.userBet.count({
+      where: { userId }
+    });
+
+    // Get active bets count
+    const activeBets = await prisma.userBet.count({
+      where: { userId, settled: false }
+    });
+
+    // Get settled bets count
+    const settledBets = await prisma.userBet.count({
+      where: { userId, settled: true }
+    });
+
+    // Get won bets count
+    const wonBets = await prisma.userBet.count({
+      where: { userId, settled: true, won: true }
+    });
+
+    // Get lost bets count
+    const lostBets = await prisma.userBet.count({
+      where: { userId, settled: true, won: false }
+    });
+
+    // Get aggregated stats
+    const aggregateStats = await prisma.userBet.aggregate({
+      where: { userId },
+      _sum: {
+        stake: true,
+        payout: true
+      }
+    });
+
+    const totalStaked = aggregateStats._sum.stake || 0;
+    const totalWon = aggregateStats._sum.payout || 0;
+    const profit = totalWon - totalStaked;
+    const winRate = settledBets > 0 ? (wonBets / settledBets * 100) : 0;
+    const roi = totalStaked > 0 ? (profit / totalStaked * 100) : 0;
+
+    res.json({
+      success: true,
+      stats: {
+        total: totalBets,
+        active: activeBets,
+        settled: settledBets,
+        won: wonBets,
+        lost: lostBets,
+        winRate: parseFloat(winRate.toFixed(2)),
+        totalStaked: totalStaked,
+        totalWon: totalWon,
+        profit: profit,
+        roi: parseFloat(roi.toFixed(2))
+      }
+    });
+
+  } catch (error) {
+    console.error("Error fetching bet stats:", error);
+    res.status(500).json({
+      error: "Failed to fetch bet stats"
+    });
+  }
+});
+
 router.get("/:id", authMiddleware, async (req, res) => {
   try {
     const bet = await prisma.userBet.findUnique({
