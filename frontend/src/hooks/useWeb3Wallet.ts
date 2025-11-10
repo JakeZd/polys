@@ -47,7 +47,8 @@ export function useWeb3Wallet() {
       // Step 4: Sign the message with the wallet
       toast.loading('Please sign the message in your wallet...', { id: 'auth' });
 
-      const ethersProvider = new BrowserProvider(walletProvider);
+      // Create provider without making RPC calls
+      const ethersProvider = new BrowserProvider(walletProvider, 'any');
       const signer = await ethersProvider.getSigner();
       const signature = await signer.signMessage(message);
 
