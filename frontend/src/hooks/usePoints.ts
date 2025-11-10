@@ -118,6 +118,7 @@ export function useDailyCheckin(signCheckin: () => Promise<{ message: string; si
 
 /**
  * Проверка возможности check-in
+ * Check-in resets at 00:00 UTC
  */
 export function useCanCheckin() {
   const user = useUser();
@@ -126,9 +127,10 @@ export function useCanCheckin() {
 
   const lastCheckin = new Date(user.lastCheckin);
   const today = new Date();
-  
-  lastCheckin.setHours(0, 0, 0, 0);
-  today.setHours(0, 0, 0, 0);
+
+  // Use UTC time for consistent check-in across timezones
+  lastCheckin.setUTCHours(0, 0, 0, 0);
+  today.setUTCHours(0, 0, 0, 0);
 
   return lastCheckin.getTime() !== today.getTime();
 }

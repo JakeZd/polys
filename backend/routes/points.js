@@ -163,29 +163,31 @@ router.post("/checkin", authMiddleware, checkinLimiter, async (req, res) => {
       });
     }
 
+    // Use UTC time for consistent check-in across timezones
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setUTCHours(0, 0, 0, 0);
 
     if (user.lastCheckin) {
       const lastCheckin = new Date(user.lastCheckin);
-      lastCheckin.setHours(0, 0, 0, 0);
+      lastCheckin.setUTCHours(0, 0, 0, 0);
 
       if (lastCheckin.getTime() === today.getTime()) {
+        const nextCheckin = new Date(today.getTime() + 24 * 60 * 60 * 1000);
         return res.status(400).json({
           error: "Already checked in today",
-          nextCheckin: new Date(today.getTime() + 24 * 60 * 60 * 1000)
+          nextCheckin: nextCheckin.toISOString()
         });
       }
     }
 
     const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
 
     let streakDays = 1;
 
     if (user.lastCheckin) {
       const lastCheckin = new Date(user.lastCheckin);
-      lastCheckin.setHours(0, 0, 0, 0);
+      lastCheckin.setUTCHours(0, 0, 0, 0);
 
       if (lastCheckin.getTime() === yesterday.getTime()) {
         streakDays = (user.streakDays || 0) + 1;
