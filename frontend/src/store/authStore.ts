@@ -7,6 +7,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { setAuthToken } from '@/api';
 import type { User } from '@/types';
+import { useEffect, useState } from 'react';
 
 interface AuthState {
   // State
@@ -106,10 +107,40 @@ export const useAuthStore = create<AuthState>()(
   )
 );
 
-// Selectors (для оптимизации)
-export const useUser = () => useAuthStore((state) => state.user);
-export const useToken = () => useAuthStore((state) => state.token);
-export const useIsAuthenticated = () => useAuthStore((state) => state.isAuthenticated);
-export const useUserPoints = () => useAuthStore((state) => state.user?.points ?? 0);
+// Hook to check if store is hydrated (fixes SSR issues)
+const useHydration = () => {
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  return hydrated;
+};
+
+// Selectors with SSR safety (для оптимизации)
+export const useUser = () => {
+  const hydrated = useHydration();
+  const user = useAuthStore((state) => state.user);
+  return hydrated ? user : null;
+};
+
+export const useToken = () => {
+  const hydrated = useHydration();
+  const token = useAuthStore((state) => state.token);
+  return hydrated ? token : null;
+};
+
+export const useIsAuthenticated = () => {
+  const hydrated = useHydration();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  return hydrated ? isAuthenticated : false;
+};
+
+export const useUserPoints = () => {
+  const hydrated = useHydration();
+  const points = useAuthStore((state) => state.user?.points ?? 0);
+  return hydrated ? points : 0;
+};
 
 export default useAuthStore;
