@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PolySynapse - Neural Prediction Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white">
+    <header class="bg-gray-800 border-b border-gray-700">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                    🧠 PolySynapse
+                </h1>
+                <div class="flex items-center space-x-4">
+                    <div id="user-info" class="hidden">
+                        <div class="flex items-center space-x-3">
+                            <a href="/profile.html" class="text-blue-400 hover:text-blue-300">
+                                👤 Profile
+                            </a>
+                            <button id="checkin-btn" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg">
+                                📅 Check-in
+                            </button>
+                            <div class="bg-gray-700 px-4 py-2 rounded-lg">
+                                💰 <span id="points-balance">0</span> pts
+                            </div>
+                            <button onclick="logout()" class="text-red-400">Logout</button>
+                        </div>
+                    </div>
+                    <button id="connect-wallet" onclick="connectWallet()" 
+                            class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg">
+                        Connect Wallet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <div class="flex space-x-2 mb-6 overflow-x-auto pb-2">
+            <button onclick="filterCategory('all')" class="category-btn bg-blue-600 px-4 py-2 rounded-lg whitespace-nowrap">All Active</button>
+            <button onclick="filterCategory('results')" class="category-btn bg-gray-700 px-4 py-2 rounded-lg whitespace-nowrap">📊 Results</button>
+            <button onclick="filterCategory('politics')" class="category-btn bg-gray-700 px-4 py-2 rounded-lg whitespace-nowrap">Politics</button>
+            <button onclick="filterCategory('crypto')" class="category-btn bg-gray-700 px-4 py-2 rounded-lg whitespace-nowrap">Crypto</button>
+            <button onclick="filterCategory('sports')" class="category-btn bg-gray-700 px-4 py-2 rounded-lg whitespace-nowrap">Sports</button>
+            <button onclick="filterCategory('finance')" class="category-btn bg-gray-700 px-4 py-2 rounded-lg whitespace-nowrap">Finance</button>
+            <button onclick="filterCategory('tech')" class="category-btn bg-gray-700 px-4 py-2 rounded-lg whitespace-nowrap">Tech</button>
+            <button onclick="filterCategory('world')" class="category-btn bg-gray-700 px-4 py-2 rounded-lg whitespace-nowrap">World</button>
+            <button onclick="filterCategory('science')" class="category-btn bg-gray-700 px-4 py-2 rounded-lg whitespace-nowrap">Science</button>
+            <button onclick="filterCategory('pop-culture')" class="category-btn bg-gray-700 px-4 py-2 rounded-lg whitespace-nowrap">Pop Culture</button>
+        </div>
+
+        <div id="results-stats" class="hidden mb-6 grid grid-cols-5 gap-4">
+            <div class="bg-gray-800 rounded-lg p-4 text-center">
+                <div class="text-2xl font-bold text-green-400" id="stats-wins">0</div>
+                <div class="text-sm text-gray-400">Wins</div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-4 text-center">
+                <div class="text-2xl font-bold text-red-400" id="stats-losses">0</div>
+                <div class="text-sm text-gray-400">Losses</div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-4 text-center">
+                <div class="text-2xl font-bold text-blue-400" id="stats-total-stake">0</div>
+                <div class="text-sm text-gray-400">Staked</div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-4 text-center">
+                <div class="text-2xl font-bold text-purple-400" id="stats-total-payout">0</div>
+                <div class="text-sm text-gray-400">Payout</div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-4 text-center">
+                <div class="text-2xl font-bold" id="stats-pnl">0</div>
+                <div class="text-sm text-gray-400">P&L</div>
+            </div>
+        </div>
+
+        <div id="markets-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-full text-center py-12">Loading...</div>
+        </div>
+    </main>
+
+    <div id="bet-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold mb-4" id="modal-question"></h3>
+            <div class="bg-gray-700 rounded p-3 mb-4">
+                <div class="text-sm font-bold mb-2">🤖 AI Prediction:</div>
+                <div id="modal-ai-side" class="text-lg font-bold"></div>
+                <div id="modal-ai-reasoning" class="text-xs mt-2 text-gray-400"></div>
+            </div>
+            
+            <div id="ai-choice-info" class="bg-blue-900/30 rounded p-3 mb-4 border border-blue-700/50">
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-bold mb-2">Stake Amount:</label>
+                <input type="number" id="stake-input" min="10" max="10000" value="100" 
+                       oninput="updatePotentialWin()"
+                       class="w-full bg-gray-700 px-4 py-2 rounded-lg">
+                <div class="text-xs text-gray-400 mt-1">Min: 10, Max: 10,000 points</div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <div id="potential-agree" class="bg-gray-700 rounded p-3 text-center">
+                    <div class="text-xs text-gray-400">Calculating...</div>
+                </div>
+                <div id="potential-disagree" class="bg-gray-700 rounded p-3 text-center">
+                    <div class="text-xs text-gray-400">Calculating...</div>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-bold mb-2">Your Choice:</label>
+                <div class="flex space-x-2">
+                    <button onclick="selectChoice('agree')" id="btn-agree" class="flex-1 bg-gray-700 hover:bg-green-600 px-4 py-3 rounded-lg transition">
+                        <div class="font-bold">✓ Agree with AI</div>
+                    </button>
+                    <button onclick="selectChoice('disagree')" id="btn-disagree" class="flex-1 bg-gray-700 hover:bg-red-600 px-4 py-3 rounded-lg transition">
+                        <div class="font-bold">✗ Disagree with AI</div>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="flex space-x-2">
+                <button onclick="closeModal()" class="flex-1 bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg">
+                    Cancel
+                </button>
+                <button onclick="placeBet()" id="place-bet-btn" class="flex-1 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg">
+                    Place Bet
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:4000/api';
+        let currentUser = null;
+        let allAIBets = [];
+        let currentCategory = 'all';
+        let currentMarket = null;
+        let selectedSide = null;
+
+        async function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                try {
+                    const response = await fetch(`${API_URL}/auth/me`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success) {
+                            currentUser = data.user;
+                            document.getElementById('connect-wallet').classList.add('hidden');
+                            document.getElementById('user-info').classList.remove('hidden');
+                            document.getElementById('points-balance').textContent = data.user.points;
+                            
+                            const checkinBtn = document.getElementById('checkin-btn');
+                            checkinBtn.onclick = performCheckin;
+                            
+                            loadAllAIBets();
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Auth check failed:', error);
+                }
+                
+                localStorage.removeItem('token');
+            }
+        }
+
+        async function connectWallet() {
+            if (!window.ethereum) return alert('Install MetaMask!');
+            try {
+                console.log('1. Requesting accounts...');
+                const provider = new ethers.BrowserProvider(window.ethereum);
+                const accounts = await provider.send("eth_requestAccounts", []);
+                const wallet = accounts[0];
+                console.log('2. Wallet:', wallet);
+                
+                console.log('3. Getting nonce...');
+                const nonceResponse = await fetch(`${API_URL}/auth/nonce/${wallet}`);
+                const nonceData = await nonceResponse.json();
+                console.log('4. Nonce response:', nonceData);
+                const { message } = nonceData;
+                
+                console.log('5. Signing message...');
+                const signer = await provider.getSigner();
+                const signature = await signer.signMessage(message);
+                console.log('6. Signature obtained');
+                
+                console.log('7. Verifying signature...');
+                const authResponse = await fetch(`${API_URL}/auth/verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ wallet, signature, message })
+                });
+                
+                console.log('8. Auth response status:', authResponse.status);
+                const authData = await authResponse.json();
+                console.log('9. Auth data:', authData);
+                
+                if (authData.success) {
+                    console.log('10. Token:', authData.token);
+                    console.log('11. Saving token to localStorage...');
+                    localStorage.setItem('token', authData.token);
+                    console.log('12. Token saved! Verify:', localStorage.getItem('token'));
+                    
+                    currentUser = authData.user;
+                    document.getElementById('connect-wallet').classList.add('hidden');
+                    document.getElementById('user-info').classList.remove('hidden');
+                    document.getElementById('points-balance').textContent = authData.user.points;
+                    
+                    const checkinBtn = document.getElementById('checkin-btn');
+                    checkinBtn.onclick = performCheckin;
+                    
+                    loadAllAIBets();
+                } else {
+                    console.error('Auth failed:', authData);
+                    alert('Authentication failed: ' + (authData.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Connection error:', error);
+                alert('Connection failed: ' + error.message);
+            }
+        }
+
+        async function performCheckin() {
+            if (!currentUser || !window.ethereum) return;
+            
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const message = `Daily check-in for ${today}`;
+                
+                const provider = new ethers.BrowserProvider(window.ethereum);
+                const signer = await provider.getSigner();
+                const signature = await signer.signMessage(message);
+                
+                const response = await fetch(`${API_URL}/auth/checkin`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        userId: currentUser.id,
+                        signature: signature
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`✅ Check-in successful!\nStreak: Day ${data.streakDays}\nReward: +${data.points} points`);
+                    currentUser.points += data.points;
+                    document.getElementById('points-balance').textContent = currentUser.points;
+                } else {
+                    alert(data.error || 'Check-in failed');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Check-in failed');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('token');
+            document.getElementById('connect-wallet').classList.remove('hidden');
+            document.getElementById('user-info').classList.add('hidden');
+        }
+
+        async function loadAllAIBets() {
+            try {
+                const response = await fetch(`${API_URL}/bets/ai?limit=1000`);
+                const data = await response.json();
+                if (data.success) {
+                    allAIBets = data.bets;
+                    
+                    if (data.stats && data.stats.winRate > 0) {
+                        const winRateBadge = document.createElement('div');
+                        winRateBadge.className = 'mb-4 bg-gradient-to-r from-purple-900 to-blue-900 rounded-lg p-4 border border-purple-500';
+                        winRateBadge.innerHTML = `
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-sm text-gray-400">🤖 AI Performance</div>
+                                    <div class="text-2xl font-bold text-purple-300">${data.stats.winRate.toFixed(1)}% Win Rate</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm text-gray-400">${data.stats.wonBets}/${data.stats.totalBets} Wins</div>
+                                    <div class="text-sm font-bold ${data.stats.profit >= 0 ? 'text-green-400' : 'text-red-400'}">
+                                        ${data.stats.profit > 0 ? '+' : ''}${data.stats.profit} pts
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        const grid = document.getElementById('markets-grid');
+                        grid.insertBefore(winRateBadge, grid.firstChild);
+                    }
+                    
+                    filterAndDisplayBets(currentCategory);
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        function filterAndDisplayBets(category) {
+            currentCategory = category;
+            let filteredBets = allAIBets;
+            
+            if (category === 'results') {
+                filteredBets = allAIBets.filter(bet => bet.settled === true);
+                document.getElementById('results-stats').classList.remove('hidden');
+                
+                const wins = filteredBets.filter(b => b.won).length;
+                const losses = filteredBets.filter(b => !b.won).length;
+                const totalStake = filteredBets.reduce((sum, b) => sum + b.stake, 0);
+                const totalPayout = filteredBets.reduce((sum, b) => sum + (b.payout || 0), 0);
+                const pnl = totalPayout - totalStake;
+                
+                document.getElementById('stats-wins').textContent = wins;
+                document.getElementById('stats-losses').textContent = losses;
+                document.getElementById('stats-total-stake').textContent = totalStake;
+                document.getElementById('stats-total-payout').textContent = totalPayout;
+                document.getElementById('stats-pnl').textContent = pnl;
+                document.getElementById('stats-pnl').className = `text-2xl font-bold ${pnl >= 0 ? 'text-green-400' : 'text-red-400'}`;
+            } else {
+                filteredBets = allAIBets.filter(bet => bet.settled === false);
+                document.getElementById('results-stats').classList.add('hidden');
+                if (category !== 'all') {
+                    filteredBets = filteredBets.filter(bet => bet.market.category === category);
+                }
+            }
+            
+            displayAIBets(filteredBets);
+        }
+
+        function displayAIBets(aiBets) {
+            const grid = document.getElementById('markets-grid');
+            if (aiBets.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center py-12">No bets</div>';
+                return;
+            }
+            grid.innerHTML = '';
+            aiBets.forEach(bet => {
+                const market = bet.market;
+                const card = document.createElement('div');
+                let borderClass = bet.settled ? (bet.won ? 'border-green-500' : 'border-red-500') : 'border-gray-700';
+                card.className = `bg-gray-800 rounded-lg p-6 border-2 ${borderClass}`;
+                
+                let statusBadge = bet.settled 
+                    ? (bet.won ? '<span class="bg-green-600 px-2 py-1 rounded text-xs">✅ WON</span>' : '<span class="bg-red-600 px-2 py-1 rounded text-xs">❌ LOST</span>')
+                    : '<span class="bg-yellow-600 px-2 py-1 rounded text-xs">⏳ Active</span>';
+                
+                const profitLoss = bet.settled ? (bet.payout || 0) - bet.stake : 0;
+                
+                let currentPNL = 0;
+                let currentPNLPercent = 0;
+                let shares = 0;
+                let currentValue = 0;
+                
+                const displayPrice = bet.currentPrice !== null && bet.currentPrice !== undefined 
+                    ? bet.currentPrice 
+                    : bet.entryPrice;
+                
+                if (!bet.settled) {
+                    shares = bet.stake / bet.entryPrice;
+                    currentValue = shares * displayPrice;
+                    currentPNL = Math.round(currentValue - bet.stake);
+                    currentPNLPercent = ((displayPrice - bet.entryPrice) / bet.entryPrice * 100);
+                }
+                
+                const betDate = new Date(bet.placedAt).toLocaleString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                const endDate = new Date(market.endTime).toLocaleString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+                
+                const lastPriceUpdate = bet.updatedAt ? new Date(bet.updatedAt) : new Date(bet.placedAt);
+                const minutesAgo = Math.floor((Date.now() - lastPriceUpdate.getTime()) / 60000);
+                const priceUpdateText = minutesAgo < 1 ? 'just now' : 
+                                       minutesAgo < 60 ? `${minutesAgo}m ago` : 
+                                       `${Math.floor(minutesAgo / 60)}h ago`;
+                
+                const isPriceStale = minutesAgo > 10;
+                const priceIndicator = bet.currentPrice !== null && bet.currentPrice !== bet.entryPrice
+                    ? `<span class="text-xs ${isPriceStale ? 'text-yellow-400' : 'text-green-400'}">(${priceUpdateText})</span>`
+                    : '<span class="text-xs text-gray-500">(initial)</span>';
+                
+                const userBetsCount = market.userBetsCount || 0;
+                const totalUserVolume = market.totalUserVolume || 0;
+                
+                const betButton = !bet.settled && currentUser ? 
+                    `<button onclick="openBetModal('${bet.market.id}')" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-bold">
+                        Place Your Bet
+                    </button>` : '';
+                
+                card.innerHTML = `
+                    <div class="mb-3 flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-blue-600 px-2 py-1 rounded text-xs">${market.category}</span>
+                            ${statusBadge}
+                        </div>
+                        <div class="text-xs text-gray-400">🕐 ${betDate}</div>
+                    </div>
+                    
+                    <h3 class="font-bold mb-2 text-lg">${market.question}</h3>
+                    
+                    <div class="text-xs text-gray-400 mb-3">
+                        📅 Closes: ${endDate}
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-blue-900 to-purple-900 rounded p-3 mb-3">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="text-sm font-bold">🤖 AI Prediction:</div>
+                            <div class="text-lg font-bold text-blue-300">${bet.side}</div>
+                        </div>
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="text-xs text-gray-400">Confidence:</div>
+                            <div class="text-sm font-bold text-purple-300">${Math.round(bet.confidence * 100)}%</div>
+                        </div>
+                        <div class="text-xs mt-2 italic text-gray-300 border-t border-gray-700 pt-2">
+                            ${bet.reasoning.substring(0, 120)}...
+                        </div>
+                    </div>
+                    
+                    ${!bet.settled ? `
+                        <div class="grid grid-cols-2 gap-2 mb-3">
+                            <div class="bg-gray-700 rounded p-2">
+                                <div class="text-xs text-gray-400">Entry Price</div>
+                                <div class="font-bold text-blue-400">${(bet.entryPrice * 100).toFixed(1)}%</div>
+                            </div>
+                            <div class="bg-gray-700 rounded p-2">
+                                <div class="text-xs text-gray-400 flex items-center justify-between">
+                                    <span>Current Price</span>
+                                    ${priceIndicator}
+                                </div>
+                                <div class="font-bold text-purple-400">${(displayPrice * 100).toFixed(1)}%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-3 gap-2 mb-3">
+                            <div class="bg-gray-700 rounded p-2 text-center">
+                                <div class="text-xs text-gray-400">Stake</div>
+                                <div class="font-bold">${bet.stake}</div>
+                            </div>
+                            <div class="bg-gray-700 rounded p-2 text-center">
+                                <div class="text-xs text-gray-400">Shares</div>
+                                <div class="font-bold text-cyan-400">${shares > 0 ? shares.toFixed(1) : Math.round(bet.stake / bet.entryPrice)}</div>
+                            </div>
+                            <div class="bg-gray-700 rounded p-2 text-center">
+                                <div class="text-xs text-gray-400">Max Win</div>
+                                <div class="font-bold text-green-400">${Math.round(bet.stake / bet.entryPrice)}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-700 rounded p-3 mb-3">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="text-xs text-gray-400">Current Value:</div>
+                                <div class="text-lg font-bold text-yellow-400">${currentValue.toFixed(0)} pts</div>
+                            </div>
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="text-xs text-gray-400">Current P/L:</div>
+                                <div class="text-xl font-bold ${currentPNL >= 0 ? 'text-green-400' : 'text-red-400'}">${currentPNL > 0 ? '+' : ''}${currentPNL} pts</div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div class="text-xs text-gray-400">Price Change:</div>
+                                <div class="text-sm font-bold ${currentPNLPercent >= 0 ? 'text-green-400' : 'text-red-400'}">${currentPNLPercent > 0 ? '+' : ''}${currentPNLPercent.toFixed(2)}%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-blue-900/30 rounded p-2 mb-3 border border-blue-700/50">
+                            <div class="flex justify-between items-center text-xs">
+                                <div class="text-gray-400">👥 User Bets:</div>
+                                <div class="font-bold text-blue-300">${userBetsCount} bets (${totalUserVolume} pts)</div>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="grid grid-cols-2 gap-2 mb-3">
+                            <div class="bg-gray-700 rounded p-2 text-center">
+                                <div class="text-xs text-gray-400">Entry Price</div>
+                                <div class="font-bold text-blue-400">${(bet.entryPrice * 100).toFixed(1)}%</div>
+                            </div>
+                            <div class="bg-gray-700 rounded p-2 text-center">
+                                <div class="text-xs text-gray-400">Final Outcome</div>
+                                <div class="font-bold ${bet.won ? 'text-green-400' : 'text-red-400'}">${market.outcome}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-2 mb-3">
+                            <div class="bg-gray-700 rounded p-2 text-center">
+                                <div class="text-xs text-gray-400">Stake</div>
+                                <div class="font-bold">${bet.stake}</div>
+                            </div>
+                            <div class="bg-gray-700 rounded p-2 text-center">
+                                <div class="text-xs text-gray-400">Payout</div>
+                                <div class="font-bold text-yellow-400">${bet.payout || 0}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-700 rounded p-3 text-center">
+                            <div class="text-xs text-gray-400 mb-1">Final P/L</div>
+                            <div class="text-2xl font-bold ${profitLoss >= 0 ? 'text-green-400' : 'text-red-400'}">${profitLoss > 0 ? '+' : ''}${profitLoss} pts</div>
+                        </div>
+                    `}
+                    
+                    ${betButton}
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        async function openBetModal(marketId) {
+            const bet = allAIBets.find(b => b.market.id === marketId);
+            if (!bet) return;
+            
+            currentMarket = bet.market;
+            selectedSide = null;
+            
+            const displayPrice = bet.currentPrice !== null && bet.currentPrice !== undefined 
+                ? bet.currentPrice 
+                : bet.entryPrice;
+            
+            const yesPrice = bet.side === 'YES' ? displayPrice : (1 - displayPrice);
+            const noPrice = bet.side === 'NO' ? displayPrice : (1 - displayPrice);
+            
+            document.getElementById('modal-question').textContent = bet.market.question;
+            document.getElementById('modal-ai-side').textContent = `${bet.side} (${Math.round(bet.confidence * 100)}% confidence)`;
+            document.getElementById('modal-ai-reasoning').textContent = bet.reasoning;
+            
+            const aiChoiceInfo = document.getElementById('ai-choice-info');
+            aiChoiceInfo.innerHTML = `
+                <div class="text-xs text-gray-400 mb-2">Current Market Prices:</div>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="bg-green-900/30 border border-green-500/50 rounded p-2">
+                        <div class="text-gray-400">YES Price</div>
+                        <div class="font-bold text-green-400">${(yesPrice * 100).toFixed(1)}%</div>
+                    </div>
+                    <div class="bg-red-900/30 border border-red-500/50 rounded p-2">
+                        <div class="text-gray-400">NO Price</div>
+                        <div class="font-bold text-red-400">${(noPrice * 100).toFixed(1)}%</div>
+                    </div>
+                </div>
+            `;
+            
+            window.currentBetPrices = { yesPrice, noPrice, aiSide: bet.side };
+            
+            document.getElementById('stake-input').value = '100';
+            document.getElementById('btn-yes').classList.remove('bg-green-600');
+            document.getElementById('btn-no').classList.remove('bg-red-600');
+            document.getElementById('btn-yes').classList.add('bg-gray-700');
+            document.getElementById('btn-no').classList.add('bg-gray-700');
+            
+            updatePotentialWin();
+            
+            document.getElementById('bet-modal').classList.remove('hidden');
+        }
+        
+        function updatePotentialWin() {
+            const stake = parseInt(document.getElementById('stake-input').value) || 100;
+            const { yesPrice, noPrice, aiSide } = window.currentBetPrices || {};
+            
+            if (!yesPrice || !noPrice) return;
+            
+            const agreePrice = aiSide === 'YES' ? yesPrice : noPrice;
+            const disagreePrice = aiSide === 'YES' ? noPrice : yesPrice;
+            
+            const agreeShares = stake / agreePrice;
+            const disagreeShares = stake / disagreePrice;
+            
+            const agreePotential = Math.round(agreeShares);
+            const disagreePotential = Math.round(disagreeShares);
+            
+            document.getElementById('potential-agree').innerHTML = `
+                <div class="text-xs text-gray-400">Agree with AI (${aiSide})</div>
+                <div class="font-bold text-green-400">Entry: ${(agreePrice * 100).toFixed(1)}%</div>
+                <div class="text-sm text-blue-300">Max Win: ${agreePotential} pts</div>
+            `;
+            
+            document.getElementById('potential-disagree').innerHTML = `
+                <div class="text-xs text-gray-400">Disagree with AI (${aiSide === 'YES' ? 'NO' : 'YES'})</div>
+                <div class="font-bold text-red-400">Entry: ${(disagreePrice * 100).toFixed(1)}%</div>
+                <div class="text-sm text-blue-300">Max Win: ${disagreePotential} pts</div>
+            `;
+        }
+
+        function closeModal() {
+            document.getElementById('bet-modal').classList.add('hidden');
+            selectedSide = null;
+            currentMarket = null;
+        }
+
+        function selectChoice(choice) {
+            selectedSide = choice;
+            const btnAgree = document.getElementById('btn-agree');
+            const btnDisagree = document.getElementById('btn-disagree');
+            
+            if (choice === 'agree') {
+                btnAgree.classList.remove('bg-gray-700');
+                btnAgree.classList.add('bg-green-600');
+                btnDisagree.classList.remove('bg-red-600');
+                btnDisagree.classList.add('bg-gray-700');
+            } else {
+                btnDisagree.classList.remove('bg-gray-700');
+                btnDisagree.classList.add('bg-red-600');
+                btnAgree.classList.remove('bg-green-600');
+                btnAgree.classList.add('bg-gray-700');
+            }
+        }
+
+        async function placeBet() {
+            if (!selectedSide || !currentUser || !currentMarket) {
+                alert('Please select your choice');
+                return;
+            }
+            
+            const stake = parseInt(document.getElementById('stake-input').value);
+            
+            if (stake < 10 || stake > 10000) {
+                return alert('Stake must be between 10 and 10,000 points');
+            }
+            
+            if (stake > currentUser.points) {
+                return alert('Insufficient points');
+            }
+            
+            const { yesPrice, noPrice, aiSide } = window.currentBetPrices;
+            
+            const agreeWithAI = selectedSide === 'agree';
+            const userSide = agreeWithAI 
+                ? aiSide 
+                : (aiSide === 'YES' ? 'NO' : 'YES');
+            
+            const entryPrice = userSide === 'YES' ? yesPrice : noPrice;
+            
+            try {
+                const response = await fetch(`${API_URL}/bets/place`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        marketId: currentMarket.id,
+                        side: userSide,
+                        stake: stake,
+                        entryPrice: entryPrice,
+                        agreeWithAI: agreeWithAI
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`✅ Bet placed!\n${userSide} at ${(entryPrice * 100).toFixed(1)}%\nMax Win: ${Math.round(stake / entryPrice)} pts`);
+                    currentUser.points = data.newBalance;
+                    document.getElementById('points-balance').textContent = data.newBalance;
+                    closeModal();
+                    loadAllAIBets();
+                } else {
+                    alert(data.error || 'Failed to place bet');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Failed to place bet');
+            }
+        }
+
+        function filterCategory(category) {
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600');
+                btn.classList.add('bg-gray-700');
+            });
+            event.target.classList.remove('bg-gray-700');
+            event.target.classList.add('bg-blue-600');
+            filterAndDisplayBets(category);
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            currentUser = null;
+            location.reload();
+        }
+
+        // Проверяем токен при загрузке
+        checkAuth();
+        
+        // Загружаем ставки
+        loadAllAIBets();
+    </script>
+</body>
+</html>

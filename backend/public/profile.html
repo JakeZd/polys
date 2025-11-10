@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - PolySynapse</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white">
+    <header class="bg-gray-800 border-b border-gray-700">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                    🧠 PolySynapse
+                </h1>
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="text-gray-400 hover:text-white">← Back to Markets</a>
+                    <div id="user-info" class="hidden">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-gray-700 px-4 py-2 rounded-lg">
+                                💰 <span id="points-balance">0</span> pts
+                            </div>
+                        </div>
+                    </div>
+                    <button id="connect-wallet" onclick="connectWallet()" 
+                            class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg">
+                        Connect Wallet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <div id="profile-loading" class="text-center py-12">
+            <div class="text-xl">Loading profile...</div>
+        </div>
+
+        <div id="profile-content" class="hidden">
+            <!-- User Info Card -->
+            <div class="bg-gradient-to-r from-purple-900 to-blue-900 rounded-lg p-6 mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-sm text-gray-400">Wallet Address</div>
+                        <div class="text-xl font-bold font-mono" id="user-wallet">0x...</div>
+                        <div class="text-sm text-gray-400 mt-2">
+                            Member since <span id="user-joined">---</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-4xl font-bold text-yellow-400" id="user-points">0</div>
+                        <div class="text-sm text-gray-400">Total Points</div>
+                        <div class="mt-2 text-sm">
+                            🔥 <span id="user-streak">0</span> day streak
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-gray-800 rounded-lg p-4">
+                    <div class="text-sm text-gray-400">Total Bets</div>
+                    <div class="text-3xl font-bold" id="stat-total-bets">0</div>
+                </div>
+                <div class="bg-gray-800 rounded-lg p-4">
+                    <div class="text-sm text-gray-400">Win Rate</div>
+                    <div class="text-3xl font-bold text-green-400" id="stat-win-rate">0%</div>
+                </div>
+                <div class="bg-gray-800 rounded-lg p-4">
+                    <div class="text-sm text-gray-400">Total P/L</div>
+                    <div class="text-3xl font-bold" id="stat-profit-loss">0</div>
+                </div>
+                <div class="bg-gray-800 rounded-lg p-4">
+                    <div class="text-sm text-gray-400">Active Bets</div>
+                    <div class="text-3xl font-bold text-blue-400" id="stat-active-bets">0</div>
+                </div>
+            </div>
+
+            <!-- Agreement Stats -->
+            <div class="bg-gray-800 rounded-lg p-6 mb-6">
+                <h2 class="text-xl font-bold mb-4">🤖 AI Agreement Analysis</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <div class="text-center mb-4">
+                            <div class="text-2xl font-bold text-green-400" id="agree-count">0</div>
+                            <div class="text-sm text-gray-400">Times Agreed with AI</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-xl font-bold" id="agree-win-rate">0%</div>
+                            <div class="text-xs text-gray-400">Win Rate when Agreeing</div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <div class="text-center mb-4">
+                            <div class="text-2xl font-bold text-red-400" id="disagree-count">0</div>
+                            <div class="text-sm text-gray-400">Times Disagreed with AI</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-xl font-bold" id="disagree-win-rate">0%</div>
+                            <div class="text-xs text-gray-400">Win Rate when Disagreeing</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Stats -->
+            <div class="bg-gray-800 rounded-lg p-6 mb-6">
+                <h2 class="text-xl font-bold mb-4">💰 Financial Summary</h2>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div>
+                        <div class="text-sm text-gray-400">Total Staked</div>
+                        <div class="text-xl font-bold text-blue-400" id="fin-staked">0</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-400">Total Payout</div>
+                        <div class="text-xl font-bold text-green-400" id="fin-payout">0</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-400">Realized P/L</div>
+                        <div class="text-xl font-bold" id="fin-realized-pnl">0</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-400">Active Value</div>
+                        <div class="text-xl font-bold text-purple-400" id="fin-active-value">0</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-400">Active Stake</div>
+                        <div class="text-xl font-bold text-cyan-400" id="fin-active-stake">0</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-400">Unrealized P/L</div>
+                        <div class="text-xl font-bold" id="fin-unrealized-pnl">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex space-x-2 mb-6 border-b border-gray-700">
+                <button onclick="showTab('bets')" id="tab-bets" class="tab-btn px-6 py-3 font-bold border-b-2 border-blue-600">
+                    Recent Bets
+                </button>
+                <button onclick="showTab('points')" id="tab-points" class="tab-btn px-6 py-3 font-bold border-b-2 border-transparent text-gray-400">
+                    Points History
+                </button>
+            </div>
+
+            <!-- Recent Bets Tab -->
+            <div id="bets-tab" class="space-y-4">
+                <div id="bets-list"></div>
+            </div>
+
+            <!-- Points History Tab -->
+            <div id="points-tab" class="hidden space-y-4">
+                <div id="points-list"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_URL = 'http://localhost:4000/api';
+        let currentUser = null;
+        let profileData = null;
+
+        async function connectWallet() {
+            if (!window.ethereum) {
+                alert('Please install MetaMask!');
+                return;
+            }
+            
+            try {
+                const provider = new ethers.BrowserProvider(window.ethereum);
+                const accounts = await provider.send("eth_requestAccounts", []);
+                const wallet = accounts[0];
+                
+                const nonceResponse = await fetch(`${API_URL}/auth/nonce/${wallet}`);
+                const { message } = await nonceResponse.json();
+                
+                const signer = await provider.getSigner();
+                const signature = await signer.signMessage(message);
+                
+                const authResponse = await fetch(`${API_URL}/auth/verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ wallet, signature, message })
+                });
+                
+                const authData = await authResponse.json();
+                
+                if (authData.success) {
+                    currentUser = authData.user;
+                    localStorage.setItem('token', authData.token);
+                    document.getElementById('connect-wallet').classList.add('hidden');
+                    document.getElementById('user-info').classList.remove('hidden');
+                    document.getElementById('points-balance').textContent = authData.user.points;
+                    document.getElementById('profile-loading').classList.add('hidden');
+                    
+                    await loadProfile();
+                } else {
+                    throw new Error(authData.error || 'Authentication failed');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Connection failed: ' + error.message);
+                localStorage.removeItem('token');
+                document.getElementById('profile-loading').innerHTML = `
+                    <div class="text-center">
+                        <div class="text-xl mb-4">Please connect your wallet to view your profile</div>
+                        <button onclick="connectWallet()" class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-bold">
+                            Connect Wallet
+                        </button>
+                    </div>
+                `;
+                document.getElementById('connect-wallet').classList.remove('hidden');
+            }
+        }
+
+        async function loadProfile() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('No token');
+                }
+
+                const response = await fetch(`${API_URL}/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch profile');
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    profileData = data.profile;
+                    displayProfile(profileData);
+                    document.getElementById('profile-loading').classList.add('hidden');
+                    document.getElementById('profile-content').classList.remove('hidden');
+                } else {
+                    throw new Error(data.error || 'Failed to load profile');
+                }
+            } catch (error) {
+                console.error('Load profile error:', error);
+                localStorage.removeItem('token');
+                document.getElementById('profile-loading').classList.remove('hidden');
+                document.getElementById('profile-loading').innerHTML = `
+                    <div class="text-center">
+                        <div class="text-xl text-red-400 mb-4">Failed to load profile</div>
+                        <div class="text-sm text-gray-400 mb-4">${error.message}</div>
+                        <button onclick="connectWallet()" class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-bold">
+                            Connect Wallet
+                        </button>
+                    </div>
+                `;
+                document.getElementById('connect-wallet').classList.remove('hidden');
+                document.getElementById('user-info').classList.add('hidden');
+            }
+        }
+
+        function displayProfile(profile) {
+            // User info
+            document.getElementById('user-wallet').textContent = profile.user.wallet.substring(0, 10) + '...' + profile.user.wallet.slice(-8);
+            document.getElementById('user-points').textContent = profile.user.points;
+            document.getElementById('user-streak').textContent = profile.user.streakDays;
+            document.getElementById('user-joined').textContent = new Date(profile.user.createdAt).toLocaleDateString();
+            document.getElementById('points-balance').textContent = profile.user.points;
+
+            // Stats
+            document.getElementById('stat-total-bets').textContent = profile.stats.bets.total;
+            document.getElementById('stat-win-rate').textContent = profile.stats.performance.winRate + '%';
+            document.getElementById('stat-profit-loss').textContent = profile.stats.financial.profitLoss;
+            document.getElementById('stat-profit-loss').className = profile.stats.financial.profitLoss >= 0 ? 'text-3xl font-bold text-green-400' : 'text-3xl font-bold text-red-400';
+            document.getElementById('stat-active-bets').textContent = profile.stats.bets.active;
+
+            // Agreement stats
+            document.getElementById('agree-count').textContent = profile.stats.agreement.agreedWithAI;
+            document.getElementById('agree-win-rate').textContent = profile.stats.performance.agreeWinRate + '%';
+            document.getElementById('disagree-count').textContent = profile.stats.agreement.disagreedWithAI;
+            document.getElementById('disagree-win-rate').textContent = profile.stats.performance.disagreeWinRate + '%';
+
+            // Financial
+            document.getElementById('fin-staked').textContent = profile.stats.financial.totalStaked;
+            document.getElementById('fin-payout').textContent = profile.stats.financial.totalPayout;
+            document.getElementById('fin-realized-pnl').textContent = profile.stats.financial.profitLoss;
+            document.getElementById('fin-realized-pnl').className = profile.stats.financial.profitLoss >= 0 ? 'text-xl font-bold text-green-400' : 'text-xl font-bold text-red-400';
+            document.getElementById('fin-active-value').textContent = profile.stats.financial.activeBetsValue;
+            document.getElementById('fin-active-stake').textContent = profile.stats.financial.activeBetsStake;
+            document.getElementById('fin-unrealized-pnl').textContent = profile.stats.financial.unrealizedPnL;
+            document.getElementById('fin-unrealized-pnl').className = profile.stats.financial.unrealizedPnL >= 0 ? 'text-xl font-bold text-green-400' : 'text-xl font-bold text-red-400';
+
+            // Display bets
+            displayBets(profile.recentBets);
+            displayPointsHistory(profile.pointsHistory);
+        }
+
+        function displayBets(bets) {
+            const container = document.getElementById('bets-list');
+            
+            if (bets.length === 0) {
+                container.innerHTML = '<div class="text-center py-8 text-gray-400">No bets yet</div>';
+                return;
+            }
+
+            container.innerHTML = bets.map(bet => {
+                const shares = bet.stake / bet.entryPrice;
+                const currentValue = bet.currentPrice ? shares * bet.currentPrice : 0;
+                const pnl = bet.settled ? (bet.payout || 0) - bet.stake : currentValue - bet.stake;
+                
+                const statusBadge = bet.settled 
+                    ? (bet.won ? '<span class="bg-green-600 px-2 py-1 rounded text-xs">✅ WON</span>' : '<span class="bg-red-600 px-2 py-1 rounded text-xs">❌ LOST</span>')
+                    : '<span class="bg-yellow-600 px-2 py-1 rounded text-xs">⏳ Active</span>';
+
+                return `
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <div class="flex items-start justify-between mb-2">
+                            <div class="flex-1">
+                                <div class="font-bold mb-1">${bet.market.question}</div>
+                                <div class="text-xs text-gray-400">${new Date(bet.placedAt).toLocaleString()}</div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                ${statusBadge}
+                                <span class="text-xs ${bet.agreeWithAI ? 'text-green-400' : 'text-red-400'}">
+                                    ${bet.agreeWithAI ? '✓ Agreed' : '✗ Disagreed'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2 text-sm">
+                            <div>
+                                <div class="text-gray-400 text-xs">Side</div>
+                                <div class="font-bold ${bet.side === 'YES' ? 'text-green-400' : 'text-red-400'}">${bet.side}</div>
+                            </div>
+                            <div>
+                                <div class="text-gray-400 text-xs">Stake</div>
+                                <div class="font-bold">${bet.stake}</div>
+                            </div>
+                            <div>
+                                <div class="text-gray-400 text-xs">${bet.settled ? 'Payout' : 'Current'}</div>
+                                <div class="font-bold text-yellow-400">${bet.settled ? (bet.payout || 0) : Math.round(currentValue)}</div>
+                            </div>
+                            <div>
+                                <div class="text-gray-400 text-xs">P/L</div>
+                                <div class="font-bold ${pnl >= 0 ? 'text-green-400' : 'text-red-400'}">${pnl > 0 ? '+' : ''}${Math.round(pnl)}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function displayPointsHistory(history) {
+            const container = document.getElementById('points-list');
+            
+            if (history.length === 0) {
+                container.innerHTML = '<div class="text-center py-8 text-gray-400">No points history</div>';
+                return;
+            }
+
+            container.innerHTML = history.map(item => {
+                const isPositive = item.amount > 0;
+                return `
+                    <div class="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
+                        <div>
+                            <div class="font-bold">${item.reason}</div>
+                            <div class="text-xs text-gray-400">${new Date(item.createdAt).toLocaleString()}</div>
+                        </div>
+                        <div class="text-xl font-bold ${isPositive ? 'text-green-400' : 'text-red-400'}">
+                            ${isPositive ? '+' : ''}${item.amount} pts
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('border-blue-600');
+                btn.classList.add('border-transparent', 'text-gray-400');
+            });
+            
+            document.getElementById(`tab-${tab}`).classList.add('border-blue-600');
+            document.getElementById(`tab-${tab}`).classList.remove('border-transparent', 'text-gray-400');
+            
+            document.getElementById('bets-tab').classList.add('hidden');
+            document.getElementById('points-tab').classList.add('hidden');
+            document.getElementById(`${tab}-tab`).classList.remove('hidden');
+        }
+
+        // Auto-load if already connected
+        async function checkAuth() {
+            const token = localStorage.getItem('token');
+            console.log('checkAuth: token exists?', !!token);
+            
+            if (token) {
+                try {
+                    console.log('Checking auth with /auth/me...');
+                    const authResponse = await fetch(`${API_URL}/auth/me`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    console.log('Auth response status:', authResponse.status);
+                    
+                    if (authResponse.ok) {
+                        const authData = await authResponse.json();
+                        console.log('Auth data:', authData);
+                        
+                        if (authData.success) {
+                            currentUser = authData.user;
+                            document.getElementById('connect-wallet').classList.add('hidden');
+                            document.getElementById('user-info').classList.remove('hidden');
+                            document.getElementById('points-balance').textContent = authData.user.points;
+                            
+                            console.log('Loading profile...');
+                            // Загружаем профиль
+                            const profileResponse = await fetch(`${API_URL}/profile`, {
+                                headers: { 'Authorization': `Bearer ${token}` }
+                            });
+                            
+                            console.log('Profile response status:', profileResponse.status);
+                            
+                            if (profileResponse.ok) {
+                                const profileData = await profileResponse.json();
+                                console.log('Profile loaded successfully');
+                                
+                                if (profileData.success) {
+                                    displayProfile(profileData.profile);
+                                    document.getElementById('profile-loading').classList.add('hidden');
+                                    document.getElementById('profile-content').classList.remove('hidden');
+                                    return;
+                                } else {
+                                    console.error('Profile data error:', profileData.error);
+                                }
+                            } else {
+                                console.error('Profile response not ok:', await profileResponse.text());
+                            }
+                        }
+                    } else {
+                        console.error('Auth response not ok');
+                    }
+                } catch (error) {
+                    console.error('Auth check failed:', error);
+                }
+                
+                console.log('Removing invalid token');
+                localStorage.removeItem('token');
+            }
+            
+            // Нет токена или невалидный
+            console.log('Showing connect button');
+            document.getElementById('profile-loading').innerHTML = `
+                <div class="text-center">
+                    <div class="text-xl mb-4">Please connect your wallet to view your profile</div>
+                    <button onclick="connectWallet()" class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-bold">
+                        Connect Wallet
+                    </button>
+                </div>
+            `;
+            document.getElementById('connect-wallet').classList.remove('hidden');
+        }
+        
+        checkAuth();
+    </script>
+</body>
+</html>

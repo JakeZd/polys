@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: polysynapse-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-polysynapse_db}
+      POSTGRES_USER: ${POSTGRES_USER:-polysynapse_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-polysynapse_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: polysynapse-api
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-polysynapse_user}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-polysynapse_db}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key}
+      ADMIN_KEY: ${ADMIN_KEY:-your-admin-key}
+      PORT: 4000
+      NODE_ENV: ${NODE_ENV:-production}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      RUN_AI_ON_START: ${RUN_AI_ON_START:-true}
+      AI_CONFIDENCE_THRESHOLD: ${AI_CONFIDENCE_THRESHOLD:-0.70}
+      AI_MIN_ENTRY_PRICE: ${AI_MIN_ENTRY_PRICE:-0.05}
+      AI_MAX_ENTRY_PRICE: ${AI_MAX_ENTRY_PRICE:-0.90}
+      AI_MIN_EDGE: ${AI_MIN_EDGE:-0.03}
+      AI_BETS_PER_CATEGORY: ${AI_BETS_PER_CATEGORY:-2}
+      AI_MAX_MARKET_DAYS: ${AI_MAX_MARKET_DAYS:-90}
+      AI_STAKE_AMOUNT: ${AI_STAKE_AMOUNT:-100}
+      MARKET_CATEGORIES: ${MARKET_CATEGORIES:-politics,crypto,sports,finance,world,tech,science,pop-culture}
+    ports:
+      - "${BACKEND_PORT:-4000}:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    command: sh -c "npx prisma migrate deploy && node server.js"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: polysynapse-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000/api}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  default:
+    name: polysynapse-network

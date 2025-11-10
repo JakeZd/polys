@@ -1,0 +1,174 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String        @id @default(uuid())
+  wallet        String        @unique @db.VarChar(42)
+  points        Int           @default(1000)
+  winRate       Float         @default(0)
+  totalBets     Int           @default(0)
+  totalWins     Int           @default(0)
+  streakDays    Int           @default(0)
+  lastCheckin   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  pointsLedger  PointsLedger[]
+  userBets      UserBet[]
+  checkins      Checkin[]
+  
+  @@index([points(sort: Desc)])
+  @@index([wallet])
+  @@index([createdAt])
+  @@index([lastCheckin])
+}
+
+model PointsLedger {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  wallet    String   @default("") @db.VarChar(42)
+  amount    Int
+  type      String
+  reason    String?
+  txHash    String?
+  createdAt DateTime @default(now())
+  
+  @@index([userId, createdAt])
+  @@index([wallet])
+  @@index([type])
+}
+
+model Checkin {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  wallet    String   @default("") @db.VarChar(42)
+  day       Int
+  points    Int
+  signature String
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, createdAt])
+  @@index([userId])
+  @@index([wallet])
+}
+
+model Market {
+  id            String        @id @default(uuid())
+  polymarketId  String        @unique
+  question      String        @db.Text
+  description   String?       @db.Text
+  category      String
+  yesTokenId    String
+  noTokenId     String
+  endTime       DateTime
+  resolved      Boolean       @default(false)
+  outcome       String?
+  resolutionTx  String?
+  volume        Float?
+  liquidity     Float?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  aiBets        AIBet[]
+  userBets      UserBet[]
+  priceHistory  PriceSnapshot[]
+  
+  @@index([category, resolved, endTime])
+  @@index([volume])
+  @@index([resolved])
+  @@index([endTime])
+}
+
+model AIBet {
+  id            String   @id @default(uuid())
+  marketId      String
+  market        Market   @relation(fields: [marketId], references: [id])
+  side          String
+  stake         Int      @default(100)
+  entryPrice    Float
+  currentPrice  Float?
+  confidence    Float
+  reasoning     String   @db.Text
+  aiModel       String   @default("gpt-4")
+  expectedValue Float
+  edge          Float
+  settled       Boolean  @default(false)
+  won           Boolean?
+  payout        Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+  
+  @@index([marketId])
+  @@index([settled])
+  @@index([createdAt])
+}
+
+model UserBet {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  marketId      String
+  market        Market   @relation(fields: [marketId], references: [id])
+  side          String
+  agreeWithAI   Boolean
+  stake         Int
+  entryPrice    Float
+  currentPrice  Float?
+  settled       Boolean  @default(false)
+  won           Boolean?
+  payout        Int?
+  placedAt      DateTime @default(now())
+  settledAt     DateTime?
+  updatedAt     DateTime @default(now()) @updatedAt
+  
+  @@index([userId, settled])
+  @@index([userId, placedAt])
+  @@index([marketId])
+  @@index([settled])
+}
+
+model PriceSnapshot {
+  id        String   @id @default(uuid())
+  marketId  String
+  market    Market   @relation(fields: [marketId], references: [id])
+  yesPrice  Float
+  noPrice   Float
+  timestamp DateTime @default(now())
+  
+  @@index([marketId, timestamp])
+}
+
+model SystemStats {
+  id              String   @id @default(uuid())
+  aiWinRate       Float    @default(0)
+  aiTotalBets     Int      @default(0)
+  aiTotalWins     Int      @default(0)
+  totalUsers      Int      @default(0)
+  totalUserBets   Int      @default(0)
+  totalVolume     Float    @default(0)
+  updatedAt       DateTime @updatedAt
+}
+
+model CheckinReward {
+  day       Int      @id
+  points    Int
+  createdAt DateTime @default(now())
+}
+
+model Nonce {
+  wallet    String   @id @db.VarChar(42)
+  nonce     String
+  message   String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  
+  @@index([expiresAt])
+}
