@@ -109,6 +109,62 @@ export function useWeb3Wallet() {
     }
   };
 
+  /**
+   * Sign a message for check-in
+   */
+  const signCheckin = async () => {
+    try {
+      if (!address || !isConnected) {
+        throw new Error('Wallet not connected');
+      }
+
+      if (!walletProvider) {
+        throw new Error('No wallet provider found');
+      }
+
+      // Create check-in message
+      const message = `PolySynapse Daily Check-in\nDate: ${new Date().toISOString().split('T')[0]}\nWallet: ${address}`;
+
+      // Sign the message
+      const ethersProvider = new BrowserProvider(walletProvider, 'any');
+      const signer = await ethersProvider.getSigner();
+      const signature = await signer.signMessage(message);
+
+      return { message, signature };
+    } catch (error: any) {
+      console.error('Check-in signature error:', error);
+
+      // Handle user rejection
+      if (error.code === 'ACTION_REJECTED' || error.code === 4001) {
+        toast.error('Signature rejected');
+      } else {
+        toast.error(error.message || 'Failed to sign check-in message');
+      }
+
+      throw error;
+    }
+  };
+
+  /**
+   * Disconnect wallet and logout
+   */
+  const disconnect = async () => {
+    try {
+      const { logout } = useAuthStore.getState();
+
+      // Logout from our auth system
+      logout();
+
+      // Disconnect from Web3Modal
+      await open({ view: 'Account' });
+
+      toast.success('Wallet disconnected');
+    } catch (error) {
+      console.error('Failed to disconnect:', error);
+      toast.error('Failed to disconnect wallet');
+    }
+  };
+
   return {
     // State
     address,
@@ -119,5 +175,7 @@ export function useWeb3Wallet() {
     connectAndAuth,
     openWalletModal,
     open: openWalletModal,
+    signCheckin,
+    disconnect,
   };
 }

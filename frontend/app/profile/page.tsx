@@ -7,12 +7,14 @@ import { ConnectWalletModal } from '@/components/ConnectWalletModal';
 import { useUser, useIsAuthenticated } from '@/store/authStore';
 import { useDailyCheckin, useCanCheckin, useStreakInfo, usePointsHistory } from '@/hooks/usePoints';
 import { useBetStats } from '@/hooks/useBets';
+import { useWeb3Wallet } from '@/hooks/useWeb3Wallet';
 import { formatDistanceToNow } from 'date-fns';
 
 export default function ProfilePage() {
   const user = useUser();
   const isAuthenticated = useIsAuthenticated();
-  const { mutate: checkin, isPending } = useDailyCheckin();
+  const { signCheckin } = useWeb3Wallet();
+  const { mutate: checkin, isPending } = useDailyCheckin(signCheckin);
   const canCheckin = useCanCheckin();
   const streakInfo = useStreakInfo();
   const { data: statsData } = useBetStats();
