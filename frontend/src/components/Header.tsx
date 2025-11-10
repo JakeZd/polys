@@ -3,12 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Brain, TrendingUp, Trophy, User, Coins } from 'lucide-react';
-import { useAuthStore } from '@/store/authStore';
+import { useUser, useIsAuthenticated } from '@/store/authStore';
 import { useUIStore } from '@/store/uiStore';
 
 export function Header() {
   const pathname = usePathname();
-  const { user, isAuthenticated } = useAuthStore();
+  const user = useUser();
+  const isAuthenticated = useIsAuthenticated();
   const { openConnectWallet } = useUIStore();
 
   const navItems = [

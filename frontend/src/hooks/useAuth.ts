@@ -5,7 +5,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authApi } from '@/api';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore, useIsAuthenticated, useToken } from '@/store/authStore';
 import { toast } from 'react-hot-toast';
 
 // ============================================
@@ -16,7 +16,7 @@ import { toast } from 'react-hot-toast';
  * Получение профиля пользователя
  */
 export function useProfile() {
-  const { isAuthenticated } = useAuthStore();
+  const isAuthenticated = useIsAuthenticated();
 
   return useQuery({
     queryKey: ['profile'],
@@ -30,7 +30,7 @@ export function useProfile() {
  * Проверка токена
  */
 export function useCheckToken() {
-  const { token } = useAuthStore();
+  const token = useToken();
 
   return useQuery({
     queryKey: ['check-token'],
