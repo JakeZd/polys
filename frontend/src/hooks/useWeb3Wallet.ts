@@ -24,37 +24,49 @@ export function useWeb3Wallet() {
     try {
       setIsAuthenticating(true);
 
-      // Step 1: Open Web3Modal to connect wallet
+      // Step 1: Open Web3Modal to connect wallet if not connected
       if (!isConnected) {
+        toast.loading('Opening wallet selector...', { id: 'auth' });
         await open();
-        // Wait a bit for connection to establish
+        // Wait for connection to establish
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      }
+
+      // Step 2: Verify we have the connected address and provider
+      // We need to get fresh values after connection
+      let currentAddress = address;
+      let currentProvider = walletProvider;
+
+      // If still no address after connecting, wait a bit more
+      if (!currentAddress && isConnected) {
         await new Promise(resolve => setTimeout(resolve, 1000));
+        currentAddress = address;
+        currentProvider = walletProvider;
       }
 
-      // Step 2: Get the connected address
-      if (!address) {
-        throw new Error('No wallet address found');
+      if (!currentAddress) {
+        throw new Error('No wallet address found. Please make sure your wallet is connected.');
       }
 
-      if (!walletProvider) {
-        throw new Error('No wallet provider found');
+      if (!currentProvider) {
+        throw new Error('No wallet provider found. Please reconnect your wallet.');
       }
 
       // Step 3: Request message to sign from backend
       toast.loading('Requesting signature...', { id: 'auth' });
-      const { message } = await authApi.generateMessage(address);
+      const { message } = await authApi.generateMessage(currentAddress);
 
       // Step 4: Sign the message with the wallet
       toast.loading('Please sign the message in your wallet...', { id: 'auth' });
 
       // Create provider without making RPC calls
-      const ethersProvider = new BrowserProvider(walletProvider, 'any');
+      const ethersProvider = new BrowserProvider(currentProvider, 'any');
       const signer = await ethersProvider.getSigner();
       const signature = await signer.signMessage(message);
 
       // Step 5: Verify signature with backend
       toast.loading('Verifying signature...', { id: 'auth' });
-      const response = await authApi.verifySignature(address, signature, message);
+      const response = await authApi.verifySignature(currentAddress, signature, message);
 
       // Step 6: Store auth data
       login(response.token, response.user);
@@ -70,13 +82,13 @@ export function useWeb3Wallet() {
 
       // Handle user rejection
       if (error.code === 'ACTION_REJECTED' || error.code === 4001) {
-        toast.error('Signature rejected', { id: 'auth' });
+        toast.error('Signature rejected. Click the button to try again.', { id: 'auth' });
       } else if (error.code === 'UNKNOWN_ERROR' || error.code === -32603) {
         toast.error('Network error. Please try again or switch networks.', { id: 'auth' });
       } else if (error.message?.includes('could not coalesce error')) {
         toast.error('Network connection issue. Please try again.', { id: 'auth' });
       } else {
-        toast.error(error.message || 'Authentication failed', { id: 'auth' });
+        toast.error(error.message || 'Authentication failed. Please try again.', { id: 'auth' });
       }
 
       throw error;

@@ -90,12 +90,19 @@ export function ConnectWalletModal() {
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 Authenticating...
               </>
-            ) : isConnected ? (
-              'Sign Message to Continue'
+            ) : isConnected && address ? (
+              'Sign Message to Authenticate'
             ) : (
               'Connect Wallet'
             )}
           </button>
+
+          {/* Retry hint */}
+          {isConnected && address && !isAuthenticating && (
+            <p className="text-xs text-slate-400 text-center">
+              If signing failed, click the button above to try again
+            </p>
+          )}
 
           {/* Info */}
           <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700">
