@@ -120,90 +120,131 @@ export const useAuthStore = create<AuthState>()(
   )
 );
 
-// Selectors with SSR safety - combine state reads to avoid double subscription
+// Selectors with SSR safety - use client-side only with hydration check
 export const useUser = () => {
-  // Check if we're in SSR
-  if (typeof window === 'undefined') return null;
+  const [hydrated, setHydrated] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
 
-  try {
-    const state = useAuthStore((state) => {
-      if (!state) return { user: null, hasHydrated: false };
-      return {
-        user: state.user,
-        hasHydrated: state._hasHydrated
-      };
-    });
+  useEffect(() => {
+    // Wait for hydration
+    const checkHydration = () => {
+      try {
+        const state = useAuthStore.getState();
+        if (state && state._hasHydrated) {
+          setHydrated(true);
+          setUser(state.user);
 
-    // During SSR or before hydration, return null
-    if (!state || !state.hasHydrated) return null;
-    return state.user;
-  } catch (error) {
-    console.error('Error in useUser:', error);
-    return null;
-  }
+          // Subscribe to changes
+          const unsubscribe = useAuthStore.subscribe((newState) => {
+            setUser(newState.user);
+          });
+
+          return unsubscribe;
+        }
+      } catch (error) {
+        console.error('Error in useUser hydration:', error);
+      }
+    };
+
+    const timer = setTimeout(checkHydration, 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (typeof window === 'undefined' || !hydrated) return null;
+  return user;
 };
 
 export const useToken = () => {
-  // Check if we're in SSR
-  if (typeof window === 'undefined') return null;
+  const [hydrated, setHydrated] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
 
-  try {
-    const state = useAuthStore((state) => {
-      if (!state) return { token: null, hasHydrated: false };
-      return {
-        token: state.token,
-        hasHydrated: state._hasHydrated
-      };
-    });
+  useEffect(() => {
+    const checkHydration = () => {
+      try {
+        const state = useAuthStore.getState();
+        if (state && state._hasHydrated) {
+          setHydrated(true);
+          setToken(state.token);
 
-    if (!state || !state.hasHydrated) return null;
-    return state.token;
-  } catch (error) {
-    console.error('Error in useToken:', error);
-    return null;
-  }
+          const unsubscribe = useAuthStore.subscribe((newState) => {
+            setToken(newState.token);
+          });
+
+          return unsubscribe;
+        }
+      } catch (error) {
+        console.error('Error in useToken hydration:', error);
+      }
+    };
+
+    const timer = setTimeout(checkHydration, 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (typeof window === 'undefined' || !hydrated) return null;
+  return token;
 };
 
 export const useIsAuthenticated = () => {
-  // Check if we're in SSR
-  if (typeof window === 'undefined') return false;
+  const [hydrated, setHydrated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  try {
-    const state = useAuthStore((state) => {
-      if (!state) return { isAuthenticated: false, hasHydrated: false };
-      return {
-        isAuthenticated: state.isAuthenticated,
-        hasHydrated: state._hasHydrated
-      };
-    });
+  useEffect(() => {
+    const checkHydration = () => {
+      try {
+        const state = useAuthStore.getState();
+        if (state && state._hasHydrated) {
+          setHydrated(true);
+          setIsAuthenticated(state.isAuthenticated);
 
-    if (!state || !state.hasHydrated) return false;
-    return state.isAuthenticated;
-  } catch (error) {
-    console.error('Error in useIsAuthenticated:', error);
-    return false;
-  }
+          const unsubscribe = useAuthStore.subscribe((newState) => {
+            setIsAuthenticated(newState.isAuthenticated);
+          });
+
+          return unsubscribe;
+        }
+      } catch (error) {
+        console.error('Error in useIsAuthenticated hydration:', error);
+      }
+    };
+
+    const timer = setTimeout(checkHydration, 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (typeof window === 'undefined' || !hydrated) return false;
+  return isAuthenticated;
 };
 
 export const useUserPoints = () => {
-  // Check if we're in SSR
-  if (typeof window === 'undefined') return 0;
+  const [hydrated, setHydrated] = useState(false);
+  const [points, setPoints] = useState(0);
 
-  try {
-    const state = useAuthStore((state) => {
-      if (!state) return { points: 0, hasHydrated: false };
-      return {
-        points: state.user?.points ?? 0,
-        hasHydrated: state._hasHydrated
-      };
-    });
+  useEffect(() => {
+    const checkHydration = () => {
+      try {
+        const state = useAuthStore.getState();
+        if (state && state._hasHydrated) {
+          setHydrated(true);
+          setPoints(state.user?.points ?? 0);
 
-    if (!state || !state.hasHydrated) return 0;
-    return state.points;
-  } catch (error) {
-    console.error('Error in useUserPoints:', error);
-    return 0;
-  }
+          const unsubscribe = useAuthStore.subscribe((newState) => {
+            setPoints(newState.user?.points ?? 0);
+          });
+
+          return unsubscribe;
+        }
+      } catch (error) {
+        console.error('Error in useUserPoints hydration:', error);
+      }
+    };
+
+    const timer = setTimeout(checkHydration, 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (typeof window === 'undefined' || !hydrated) return 0;
+  return points;
 };
 
 export default useAuthStore;
