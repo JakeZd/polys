@@ -4,10 +4,18 @@ import axios from "axios";
 export class AIBettingService {
   constructor(prisma) {
     this.prisma = prisma;
-    this.openai = new OpenAI({ 
-      apiKey: process.env.OPENAI_API_KEY 
-    });
-    
+
+    // Make OpenAI optional - app works without AI features
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (apiKey && apiKey !== 'sk-demo-key-replace-for-ai-features') {
+      this.openai = new OpenAI({ apiKey });
+      this.aiEnabled = true;
+    } else {
+      this.openai = null;
+      this.aiEnabled = false;
+      console.warn('⚠️  OpenAI API key not configured. AI features disabled. Set OPENAI_API_KEY in .env to enable.');
+    }
+
     this.confidence_threshold = parseFloat(process.env.AI_CONFIDENCE_THRESHOLD) || 0.75;
     this.min_entry_price = parseFloat(process.env.AI_MIN_ENTRY_PRICE) || 0.10;
     this.max_entry_price = parseFloat(process.env.AI_MAX_ENTRY_PRICE) || 0.85;
@@ -19,16 +27,22 @@ export class AIBettingService {
   }
 
   async analyzeAndBet(markets) {
+    // Check if AI is enabled
+    if (!this.aiEnabled) {
+      console.log('⚠️  AI analysis skipped - OpenAI not configured');
+      return [];
+    }
+
     const bets = [];
     const betsByCategory = {};
-    
+
     this.categories.forEach(cat => {
       betsByCategory[cat] = [];
     });
-    
+
     const targetTotal = this.categories.length * this.bets_per_category;
     const maxMarketsToAnalyze = parseInt(process.env.AI_MAX_MARKETS_TO_ANALYZE) || 1000;
-    
+
     console.log(`\n🎯 AI Betting Configuration:`);
     console.log(`   Confidence Threshold: ${this.confidence_threshold * 100}%`);
     console.log(`   Entry Price Range: ${this.min_entry_price * 100}% - ${this.max_entry_price * 100}%`);
@@ -38,7 +52,7 @@ export class AIBettingService {
     console.log(`   Categories: ${this.categories.join(", ")}`);
     console.log(`   Max markets to analyze: ${maxMarketsToAnalyze}`);
     console.log(`   Stake Amount: ${this.stake_amount} points\n`);
-    
+
     let marketsAnalyzed = 0;
     
     for (const market of markets) {

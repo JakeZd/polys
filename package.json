@@ -45,5 +45,10 @@
     "postgresql"
   ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@web3modal/common": "^5.1.11",
+    "@web3modal/scaffold-ui": "^5.1.11",
+    "@web3modal/ui": "^5.1.11"
+  }
 }
