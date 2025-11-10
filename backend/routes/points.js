@@ -199,7 +199,8 @@ router.post("/checkin", authMiddleware, checkinLimiter, async (req, res) => {
           userId: userId,
           wallet: user.wallet,
           day: streakDays,
-          points: points
+          points: points,
+          signature: "" // Empty signature for daily check-in
         }
       }),
 

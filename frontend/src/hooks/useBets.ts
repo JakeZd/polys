@@ -5,7 +5,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { betsApi } from '@/api';
-import { useAuthStore } from '@/store/authStore';
+import { useIsAuthenticated, useAuthStore } from '@/store/authStore';
 import { toast } from 'react-hot-toast';
 import type { PlaceBetRequest } from '@/types';
 
@@ -21,7 +21,7 @@ export function useMyBets(
   limit = 50,
   offset = 0
 ) {
-  const { isAuthenticated } = useAuthStore();
+  const isAuthenticated = useIsAuthenticated();
 
   return useQuery({
     queryKey: ['my-bets', status, limit, offset],
@@ -36,7 +36,7 @@ export function useMyBets(
  * Получение активных ставок
  */
 export function useActiveBets() {
-  const { isAuthenticated } = useAuthStore();
+  const isAuthenticated = useIsAuthenticated();
 
   return useQuery({
     queryKey: ['active-bets'],
@@ -51,7 +51,7 @@ export function useActiveBets() {
  * Получение завершенных ставок
  */
 export function useSettledBets(limit = 50, offset = 0) {
-  const { isAuthenticated } = useAuthStore();
+  const isAuthenticated = useIsAuthenticated();
 
   return useQuery({
     queryKey: ['settled-bets', limit, offset],
@@ -65,7 +65,7 @@ export function useSettledBets(limit = 50, offset = 0) {
  * Получение статистики ставок
  */
 export function useBetStats() {
-  const { isAuthenticated } = useAuthStore();
+  const isAuthenticated = useIsAuthenticated();
 
   return useQuery({
     queryKey: ['bet-stats'],
@@ -79,7 +79,7 @@ export function useBetStats() {
  * Получение одной ставки
  */
 export function useBet(id: string | null) {
-  const { isAuthenticated } = useAuthStore();
+  const isAuthenticated = useIsAuthenticated();
 
   return useQuery({
     queryKey: ['bet', id],
