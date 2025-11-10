@@ -9,8 +9,6 @@ export function ConnectWalletModal() {
   const { isConnectWalletOpen, closeConnectWallet } = useUIStore();
   const { address, isConnected, isAuthenticating, connectAndAuth } = useWeb3Wallet();
 
-  if (!isConnectWalletOpen) return null;
-
   // Close modal after successful authentication
   useEffect(() => {
     if (isConnected && !isAuthenticating && address) {
@@ -22,6 +20,8 @@ export function ConnectWalletModal() {
     }
     return undefined;
   }, [isConnected, isAuthenticating, address, closeConnectWallet]);
+
+  if (!isConnectWalletOpen) return null;
 
   const handleConnect = async () => {
     try {
