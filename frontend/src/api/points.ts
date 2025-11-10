@@ -14,8 +14,11 @@ export const pointsApi = {
   /**
    * Ежедневный check-in
    */
-  dailyCheckin: async (): Promise<CheckinResult> => {
-    const response = await apiClient.post<CheckinResult>('/points/checkin');
+  dailyCheckin: async (signature?: string, message?: string): Promise<CheckinResult> => {
+    const response = await apiClient.post<CheckinResult>('/points/checkin', {
+      signature,
+      message,
+    });
     return response.data;
   },
 
