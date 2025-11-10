@@ -144,6 +144,14 @@ router.get("/checkin-rewards", async (req, res) => {
 router.post("/checkin", authMiddleware, checkinLimiter, async (req, res) => {
   try {
     const userId = req.userId;
+    const { signature, message } = req.body;
+
+    // Validate signature
+    if (!signature || !message) {
+      return res.status(400).json({
+        error: "Signature and message are required"
+      });
+    }
 
     const user = await prisma.user.findUnique({
       where: { id: userId }
@@ -193,21 +201,25 @@ router.post("/checkin", authMiddleware, checkinLimiter, async (req, res) => {
     const rewardIndex = Math.min(streakDays - 1, streakRewards.length - 1);
     const points = streakRewards[rewardIndex];
 
+    // Calculate streak bonus (every 7 days)
+    const streakBonus = streakDays % 7 === 0 ? Math.floor(points * 0.5) : 0;
+    const totalReward = points + streakBonus;
+
     const result = await prisma.$transaction([
       prisma.checkin.create({
         data: {
           userId: userId,
           wallet: user.wallet,
           day: streakDays,
-          points: points,
-          signature: "" // Empty signature for daily check-in
+          points: totalReward,
+          signature: signature
         }
       }),
 
       prisma.user.update({
         where: { id: userId },
         data: {
-          points: { increment: points },
+          points: { increment: totalReward },
           streakDays: streakDays,
           lastCheckin: new Date()
         }
@@ -217,19 +229,19 @@ router.post("/checkin", authMiddleware, checkinLimiter, async (req, res) => {
         data: {
           userId: userId,
           wallet: user.wallet,
-          amount: points,
+          amount: totalReward,
           type: "checkin",
-          reason: `Daily check-in - Day ${streakDays}`
+          reason: `Daily check-in - Day ${streakDays}${streakBonus > 0 ? ` (Bonus: +${streakBonus})` : ''}`
         }
       })
     ]);
 
     res.json({
       success: true,
-      streakDays: streakDays,
-      points: points,
-      newBalance: user.points + points,
-      message: `Day ${streakDays} check-in complete! +${points} points`
+      reward: points,
+      streak: streakDays,
+      streakBonus: streakBonus,
+      newBalance: user.points + totalReward
     });
 
   } catch (error) {
