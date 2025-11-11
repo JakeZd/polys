@@ -13,27 +13,35 @@ export const useHasHydrated = () =>
   useAuthStore((s) => Boolean(s?._hasHydrated));
 
 // Селекторы с проверкой гидрации - возвращают только примитивы
+// ВАЖНО: Все проверки внутри селектора, чтобы не нарушать правила хуков
 export const useIsAuthenticated = () => {
-  const hydrated = useHasHydrated();
-  // До гидрации всегда false, чтобы ничего не рушилось
-  if (typeof window === 'undefined' || !hydrated) return false;
-  return useAuthStore((s) => Boolean(s?.isAuthenticated));
+  return useAuthStore((s) => {
+    if (typeof window === 'undefined') return false;
+    if (!s?._hasHydrated) return false;
+    return Boolean(s?.isAuthenticated);
+  });
 };
 
 export const useUser = (): User | null => {
-  const hydrated = useHasHydrated();
-  if (typeof window === 'undefined' || !hydrated) return null;
-  return useAuthStore((s) => s?.user ?? null);
+  return useAuthStore((s) => {
+    if (typeof window === 'undefined') return null;
+    if (!s?._hasHydrated) return null;
+    return s?.user ?? null;
+  });
 };
 
 export const useToken = (): string | null => {
-  const hydrated = useHasHydrated();
-  if (typeof window === 'undefined' || !hydrated) return null;
-  return useAuthStore((s) => s?.token ?? null);
+  return useAuthStore((s) => {
+    if (typeof window === 'undefined') return null;
+    if (!s?._hasHydrated) return null;
+    return s?.token ?? null;
+  });
 };
 
 export const useUserPoints = (): number => {
-  const hydrated = useHasHydrated();
-  if (typeof window === 'undefined' || !hydrated) return 0;
-  return useAuthStore((s) => s?.user?.points ?? 0);
+  return useAuthStore((s) => {
+    if (typeof window === 'undefined') return 0;
+    if (!s?._hasHydrated) return 0;
+    return s?.user?.points ?? 0;
+  });
 };
