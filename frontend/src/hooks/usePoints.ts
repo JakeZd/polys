@@ -7,7 +7,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { pointsApi } from '@/api';
-import { useAuthStore, useIsAuthenticated, useUser } from '@/store/authStore';
+import { useAuthStore } from '@/store/authStore.base';
+import { useIsAuthenticated, useUser } from '@/store/authStore.hooks';
 import { toast } from 'react-hot-toast';
 import type { PointsTransactionType } from '@/types';
 

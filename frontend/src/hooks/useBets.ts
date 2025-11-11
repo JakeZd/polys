@@ -7,7 +7,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { betsApi } from '@/api';
-import { useIsAuthenticated, useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '@/store/authStore.base';
+import { useIsAuthenticated } from '@/store/authStore.hooks';
 import { toast } from 'react-hot-toast';
 import type { PlaceBetRequest } from '@/types';
 
