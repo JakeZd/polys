@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Points Hooks - React Query
  * Умное управление поинтами и leaderboard
