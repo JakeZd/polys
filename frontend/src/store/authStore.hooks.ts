@@ -5,66 +5,101 @@
  * Безопасные селекторы для использования в клиентских компонентах
  */
 
+import { useState, useEffect } from 'react';
 import { useAuthStore } from './authStore.base';
 import type { User } from '@/types';
 
-// Selectors with SSR safety
+// Selectors with SSR safety using useState + useEffect
 export const useUser = (): User | null => {
-  const hasHydrated = useAuthStore((state) => {
-    if (typeof state === 'undefined' || state === null) return false;
-    return state._hasHydrated ?? false;
-  });
+  const [user, setUser] = useState<User | null>(null);
 
-  const user = useAuthStore((state) => {
-    if (typeof state === 'undefined' || state === null) return null;
-    return state.user ?? null;
-  });
+  useEffect(() => {
+    // Only subscribe on client after hydration
+    if (typeof window === 'undefined') return;
 
-  if (typeof window === 'undefined' || !hasHydrated) return null;
+    const unsubscribe = useAuthStore.subscribe((state) => {
+      if (state._hasHydrated) {
+        setUser(state.user);
+      }
+    });
+
+    // Set initial value after mount
+    const state = useAuthStore.getState();
+    if (state._hasHydrated) {
+      setUser(state.user);
+    }
+
+    return unsubscribe;
+  }, []);
+
   return user;
 };
 
 export const useToken = (): string | null => {
-  const hasHydrated = useAuthStore((state) => {
-    if (typeof state === 'undefined' || state === null) return false;
-    return state._hasHydrated ?? false;
-  });
+  const [token, setToken] = useState<string | null>(null);
 
-  const token = useAuthStore((state) => {
-    if (typeof state === 'undefined' || state === null) return null;
-    return state.token ?? null;
-  });
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
 
-  if (typeof window === 'undefined' || !hasHydrated) return null;
+    const unsubscribe = useAuthStore.subscribe((state) => {
+      if (state._hasHydrated) {
+        setToken(state.token);
+      }
+    });
+
+    const state = useAuthStore.getState();
+    if (state._hasHydrated) {
+      setToken(state.token);
+    }
+
+    return unsubscribe;
+  }, []);
+
   return token;
 };
 
 export const useIsAuthenticated = (): boolean => {
-  const hasHydrated = useAuthStore((state) => {
-    if (typeof state === 'undefined' || state === null) return false;
-    return state._hasHydrated ?? false;
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const isAuthenticated = useAuthStore((state) => {
-    if (typeof state === 'undefined' || state === null) return false;
-    return state.isAuthenticated ?? false;
-  });
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
 
-  if (typeof window === 'undefined' || !hasHydrated) return false;
+    const unsubscribe = useAuthStore.subscribe((state) => {
+      if (state._hasHydrated) {
+        setIsAuthenticated(state.isAuthenticated);
+      }
+    });
+
+    const state = useAuthStore.getState();
+    if (state._hasHydrated) {
+      setIsAuthenticated(state.isAuthenticated);
+    }
+
+    return unsubscribe;
+  }, []);
+
   return isAuthenticated;
 };
 
 export const useUserPoints = (): number => {
-  const hasHydrated = useAuthStore((state) => {
-    if (typeof state === 'undefined' || state === null) return false;
-    return state._hasHydrated ?? false;
-  });
+  const [points, setPoints] = useState(0);
 
-  const points = useAuthStore((state) => {
-    if (typeof state === 'undefined' || state === null) return 0;
-    return state.user?.points ?? 0;
-  });
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
 
-  if (typeof window === 'undefined' || !hasHydrated) return 0;
+    const unsubscribe = useAuthStore.subscribe((state) => {
+      if (state._hasHydrated) {
+        setPoints(state.user?.points ?? 0);
+      }
+    });
+
+    const state = useAuthStore.getState();
+    if (state._hasHydrated) {
+      setPoints(state.user?.points ?? 0);
+    }
+
+    return unsubscribe;
+  }, []);
+
   return points;
 };
