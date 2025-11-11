@@ -9,7 +9,7 @@
 export { useAuthStore } from './authStore.base';
 
 // Re-export client hooks
-export { useUser, useToken, useIsAuthenticated, useUserPoints } from './authStore.hooks';
+export { useUser, useToken, useIsAuthenticated, useUserPoints, useHasHydrated } from './authStore.hooks';
 
 // Default export
 export { default } from './authStore.base';

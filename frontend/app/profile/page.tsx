@@ -4,13 +4,14 @@ import { Coins, Flame, Trophy, TrendingUp, Calendar, Award } from 'lucide-react'
 import { NeuralBackground } from '@/components/NeuralBackground';
 import { Header } from '@/components/Header';
 import { ConnectWalletModal } from '@/components/ConnectWalletModal';
-import { useUser, useIsAuthenticated } from '@/store/authStore.hooks';
+import { useUser, useIsAuthenticated, useHasHydrated } from '@/store/authStore.hooks';
 import { useDailyCheckin, useCanCheckin, useStreakInfo, usePointsHistory } from '@/hooks/usePoints';
 import { useBetStats } from '@/hooks/useBets';
 import { useWeb3Wallet } from '@/hooks/useWeb3Wallet';
 import { formatDistanceToNow } from 'date-fns';
 
 export default function ProfilePage() {
+  const hydrated = useHasHydrated();
   const user = useUser();
   const isAuthenticated = useIsAuthenticated();
   const { signCheckin } = useWeb3Wallet();
@@ -22,6 +23,19 @@ export default function ProfilePage() {
 
   const stats = statsData?.stats;
   const history = historyData?.history || [];
+
+  // Wait for hydration before rendering
+  if (!hydrated) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white">
+        <NeuralBackground />
+        <Header />
+        <main className="relative z-10 max-w-7xl mx-auto px-6 py-8 text-center">
+          <div className="inline-block w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        </main>
+      </div>
+    );
+  }
 
   if (!isAuthenticated || !user) {
     return (

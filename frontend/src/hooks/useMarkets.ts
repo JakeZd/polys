@@ -67,7 +67,7 @@ export function useSearchMarkets(query: string, limit = 20) {
   return useQuery({
     queryKey: ['search-markets', query, limit],
     queryFn: () => marketsApi.searchMarkets(query, limit),
-    enabled: typeof query === 'string' && query.length > 0,
+    enabled: typeof query === 'string' && query !== '',
     staleTime: 30 * 1000,
   });
 }
