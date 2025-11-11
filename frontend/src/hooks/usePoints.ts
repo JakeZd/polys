@@ -68,7 +68,8 @@ export function useTopLeaders() {
 export function useDailyCheckin(signCheckin: () => Promise<{ message: string; signature: string }>) {
   const queryClient = useQueryClient();
   const user = useUser();
-  const { updatePoints, updateUser } = useAuthStore();
+  const updatePoints = useAuthStore((state) => state.updatePoints);
+  const updateUser = useAuthStore((state) => state.updateUser);
 
   return useMutation({
     mutationFn: async () => {

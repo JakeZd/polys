@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * useWeb3Wallet - Custom hook for Web3 wallet operations
  * Handles wallet connection, signing, and integration with our auth system
@@ -15,7 +17,7 @@ export function useWeb3Wallet() {
   const { address, isConnected } = useWeb3ModalAccount();
   const { walletProvider } = useWeb3ModalProvider();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const { login } = useAuthStore();
+  const login = useAuthStore((state) => state.login);
 
   /**
    * Connect wallet and authenticate with backend

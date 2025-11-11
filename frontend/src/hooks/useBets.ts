@@ -101,7 +101,7 @@ export function useBet(id: string | null) {
  */
 export function usePlaceBet() {
   const queryClient = useQueryClient();
-  const { updatePoints } = useAuthStore();
+  const updatePoints = useAuthStore((state) => state.updatePoints);
 
   return useMutation({
     mutationFn: (data: PlaceBetRequest) => betsApi.placeBet(data),
