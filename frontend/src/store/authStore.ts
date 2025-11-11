@@ -122,8 +122,8 @@ export const useAuthStore = create<AuthState>()(
 
 // Selectors with SSR safety - use Zustand's built-in selector with fallback
 export const useUser = () => {
-  const user = useAuthStore((state) => state.user);
-  const hasHydrated = useAuthStore((state) => state._hasHydrated);
+  const user = useAuthStore((state) => state?.user ?? null);
+  const hasHydrated = useAuthStore((state) => state?._hasHydrated ?? false);
 
   // During SSR or before hydration, return null
   if (typeof window === 'undefined' || !hasHydrated) {
@@ -134,8 +134,8 @@ export const useUser = () => {
 };
 
 export const useToken = () => {
-  const token = useAuthStore((state) => state.token);
-  const hasHydrated = useAuthStore((state) => state._hasHydrated);
+  const token = useAuthStore((state) => state?.token ?? null);
+  const hasHydrated = useAuthStore((state) => state?._hasHydrated ?? false);
 
   if (typeof window === 'undefined' || !hasHydrated) {
     return null;
@@ -145,8 +145,8 @@ export const useToken = () => {
 };
 
 export const useIsAuthenticated = () => {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const hasHydrated = useAuthStore((state) => state._hasHydrated);
+  const isAuthenticated = useAuthStore((state) => state?.isAuthenticated ?? false);
+  const hasHydrated = useAuthStore((state) => state?._hasHydrated ?? false);
 
   if (typeof window === 'undefined' || !hasHydrated) {
     return false;
@@ -156,8 +156,8 @@ export const useIsAuthenticated = () => {
 };
 
 export const useUserPoints = () => {
-  const points = useAuthStore((state) => state.user?.points ?? 0);
-  const hasHydrated = useAuthStore((state) => state._hasHydrated);
+  const points = useAuthStore((state) => state?.user?.points ?? 0);
+  const hasHydrated = useAuthStore((state) => state?._hasHydrated ?? false);
 
   if (typeof window === 'undefined' || !hasHydrated) {
     return 0;
