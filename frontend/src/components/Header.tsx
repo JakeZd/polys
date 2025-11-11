@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Brain, TrendingUp, Trophy, User, Coins, LogOut, ChevronDown } from 'lucide-react';
-import { useUser, useIsAuthenticated } from '@/store/authStore';
+import { useUser, useIsAuthenticated } from '@/store/authStore.hooks';
 import { useUIStore } from '@/store/uiStore';
 import { useWeb3Wallet } from '@/hooks/useWeb3Wallet';
 

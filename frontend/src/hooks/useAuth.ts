@@ -7,7 +7,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authApi } from '@/api';
-import { useAuthStore, useIsAuthenticated, useToken } from '@/store/authStore';
+import { useAuthStore } from '@/store/authStore.base';
+import { useIsAuthenticated, useToken } from '@/store/authStore.hooks';
 import { toast } from 'react-hot-toast';
 
 // ============================================

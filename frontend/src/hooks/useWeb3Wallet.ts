@@ -10,7 +10,7 @@ import { BrowserProvider } from 'ethers';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { authApi } from '@/api';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '@/store/authStore.base';
 
 export function useWeb3Wallet() {
   const { open } = useWeb3Modal();

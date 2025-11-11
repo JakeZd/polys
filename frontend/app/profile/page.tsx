@@ -4,7 +4,7 @@ import { Coins, Flame, Trophy, TrendingUp, Calendar, Award } from 'lucide-react'
 import { NeuralBackground } from '@/components/NeuralBackground';
 import { Header } from '@/components/Header';
 import { ConnectWalletModal } from '@/components/ConnectWalletModal';
-import { useUser, useIsAuthenticated } from '@/store/authStore';
+import { useUser, useIsAuthenticated } from '@/store/authStore.hooks';
 import { useDailyCheckin, useCanCheckin, useStreakInfo, usePointsHistory } from '@/hooks/usePoints';
 import { useBetStats } from '@/hooks/useBets';
 import { useWeb3Wallet } from '@/hooks/useWeb3Wallet';
