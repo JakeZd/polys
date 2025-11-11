@@ -1,6 +1,7 @@
 import './globals.css';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { Web3Provider } from '@/providers/Web3Provider';
+import { HydrationProvider } from '@/providers/HydrationProvider';
 import { Toaster } from 'react-hot-toast';
 import type { Metadata } from 'next';
 
@@ -23,10 +24,11 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-slate-950 text-white antialiased">
-        <Web3Provider>
-          <QueryProvider>
-            {children}
-            <Toaster
+        <HydrationProvider>
+          <Web3Provider>
+            <QueryProvider>
+              {children}
+              <Toaster
               position="top-right"
               toastOptions={{
                 duration: 3000,
@@ -51,6 +53,7 @@ export default function RootLayout({
             />
           </QueryProvider>
         </Web3Provider>
+        </HydrationProvider>
       </body>
     </html>
   );
