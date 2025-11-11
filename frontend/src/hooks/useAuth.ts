@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Auth Hooks - React Query
  * Умное управление данными авторизации с кешированием
@@ -58,7 +60,7 @@ export function useGenerateMessage() {
  * Проверка подписи и авторизация
  */
 export function useVerifySignature() {
-  const { login } = useAuthStore();
+  const login = useAuthStore((state) => state.login);
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -86,7 +88,7 @@ export function useVerifySignature() {
  * Упрощенная авторизация (dev only)
  */
 export function useSimpleAuth() {
-  const { login } = useAuthStore();
+  const login = useAuthStore((state) => state.login);
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -106,7 +108,7 @@ export function useSimpleAuth() {
  * Logout
  */
 export function useLogout() {
-  const { logout } = useAuthStore();
+  const logout = useAuthStore((state) => state.logout);
   const queryClient = useQueryClient();
 
   return useMutation({
