@@ -10,86 +10,33 @@ import type { User } from '@/types';
 
 // Selectors with SSR safety
 export const useUser = (): User | null => {
-  const { user, _hasHydrated } = useAuthStore((state) => {
-    if (!state) {
-      return {
-        user: null,
-        _hasHydrated: false,
-      };
-    }
-    return {
-      user: state.user ?? null,
-      _hasHydrated: state._hasHydrated ?? false,
-    };
-  });
+  const user = useAuthStore((s) => s?.user ?? null);
+  const hasHydrated = useAuthStore((s) => s?._hasHydrated ?? false);
 
-  // During SSR or before hydration, return null
-  if (typeof window === 'undefined' || !_hasHydrated) {
-    return null;
-  }
-
+  if (typeof window === 'undefined' || !hasHydrated) return null;
   return user;
 };
 
 export const useToken = (): string | null => {
-  const { token, _hasHydrated } = useAuthStore((state) => {
-    if (!state) {
-      return {
-        token: null,
-        _hasHydrated: false,
-      };
-    }
-    return {
-      token: state.token ?? null,
-      _hasHydrated: state._hasHydrated ?? false,
-    };
-  });
+  const token = useAuthStore((s) => s?.token ?? null);
+  const hasHydrated = useAuthStore((s) => s?._hasHydrated ?? false);
 
-  if (typeof window === 'undefined' || !_hasHydrated) {
-    return null;
-  }
-
+  if (typeof window === 'undefined' || !hasHydrated) return null;
   return token;
 };
 
 export const useIsAuthenticated = (): boolean => {
-  const { isAuthenticated, _hasHydrated } = useAuthStore((state) => {
-    if (!state) {
-      return {
-        isAuthenticated: false,
-        _hasHydrated: false,
-      };
-    }
-    return {
-      isAuthenticated: state.isAuthenticated ?? false,
-      _hasHydrated: state._hasHydrated ?? false,
-    };
-  });
+  const isAuthenticated = useAuthStore((s) => s?.isAuthenticated ?? false);
+  const hasHydrated = useAuthStore((s) => s?._hasHydrated ?? false);
 
-  if (typeof window === 'undefined' || !_hasHydrated) {
-    return false;
-  }
-
+  if (typeof window === 'undefined' || !hasHydrated) return false;
   return isAuthenticated;
 };
 
 export const useUserPoints = (): number => {
-  const { points, _hasHydrated } = useAuthStore((state) => {
-    if (!state) {
-      return {
-        points: 0,
-        _hasHydrated: false,
-      };
-    }
-    return {
-      points: state.user?.points ?? 0,
-      _hasHydrated: state._hasHydrated ?? false,
-    };
-  });
+  const points = useAuthStore((s) => s?.user?.points ?? 0);
+  const hasHydrated = useAuthStore((s) => s?._hasHydrated ?? false);
 
-  if (typeof window === 'undefined' || !_hasHydrated) {
-    return 0;
-  }
-
+  if (typeof window === 'undefined' || !hasHydrated) return 0;
   return points;
 };
