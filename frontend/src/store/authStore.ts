@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Auth Store - Zustand
  * Управление состоянием авторизации
